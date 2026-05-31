@@ -1,26 +1,276 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+:root,
+[data-theme="light"] {
+  --bg: #ffffff;
+  --text: #000000;
+  --accent: var(--text);
+  --muted: #666666;
+  --tint: #f2f2f2;
+  --tint-strong: #e6e6e6;
+  --border: rgba(0, 0, 0, 0.12);
+  --shadow: rgba(0, 0, 0, 0.4);
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #0a0a0a;
+  --text: #ffffff;
+  --accent: var(--text);
+  --muted: #9a9a9a;
+  --tint: #141414;
+  --tint-strong: #1f1f1f;
+  --border: rgba(255, 255, 255, 0.14);
+  --shadow: rgba(0, 0, 0, 0.7);
+  color-scheme: dark;
+}
+
+[data-theme="black"] {
+  --bg: #000000;
+  --text: #ffffff;
+  --accent: var(--text);
+  --muted: #9a9a9a;
+  --tint: #141414;
+  --tint-strong: #1f1f1f;
+  --border: rgba(255, 255, 255, 0.14);
+  --shadow: rgba(0, 0, 0, 0.7);
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-text: var(--text);
+  --color-accent: var(--accent);
+  --color-muted: var(--muted);
+  --color-tint: var(--tint);
+  --color-tint-strong: var(--tint-strong);
+  --color-border: var(--border);
+  --font-serif: var(--font-playfair);
+  --font-sans: var(--font-dm-sans);
+  --font-mono: ui-monospace, "SF Mono", "Menlo", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  accent-color: var(--accent);
+}
+
+/* Native time/select controls inherit the monochrome theme: the OS picker
+   renders dark with a neutral highlight instead of the default white + blue. */
+input[type="time"],
+select {
+  accent-color: var(--accent);
+}
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+  cursor: pointer;
+}
+[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: none;
+}
+
+/* Atmospheric warmth: a soft accent glow anchored top-center + bottom-right,
+   so the page reads as lit rather than flat-filled. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      55% 45% at 50% -8%,
+      color-mix(in oklab, var(--accent) 16%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      45% 40% at 108% 112%,
+      color-mix(in oklab, var(--accent) 11%, transparent),
+      transparent 70%
+    );
+}
+
+/* Fine film grain to break up large flat areas. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------------------------------------------------------------------------
+   Surfaces
+--------------------------------------------------------------------------- */
+
+/* Hairline-outlined card with depth + a quiet lift on hover. */
+.card {
+  border: 1px solid var(--border);
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--shadow) 10%, transparent),
+    0 10px 30px -20px var(--shadow);
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, var(--accent) 45%, var(--border));
+  box-shadow:
+    0 2px 4px color-mix(in oklab, var(--shadow) 12%, transparent),
+    0 18px 40px -22px var(--shadow);
+}
+
+/* Section heading with a short gold rule underneath as an editorial marker. */
+.section-title {
+  position: relative;
+  display: inline-block;
+}
+.section-title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -6px;
+  height: 2px;
+  width: 26px;
+  border-radius: 2px;
+  background: var(--accent);
+  transform-origin: left center;
+  animation: rule-grow 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Press feedback for buttons. */
+.press {
+  transition:
+    transform 0.12s ease,
+    filter 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.press:active {
+  transform: scale(0.96);
+}
+
+/* Accent button gains a soft halo + lift on hover. */
+.btn-accent {
+  box-shadow: 0 6px 18px -10px color-mix(in oklab, var(--accent) 80%, transparent);
+}
+.btn-accent:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 10px 24px -10px color-mix(in oklab, var(--accent) 90%, transparent);
+  transform: translateY(-1px);
+}
+
+/* ---------------------------------------------------------------------------
+   Motion
+--------------------------------------------------------------------------- */
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+.animate-shake {
+  animation: shake 0.3s ease-in-out;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.reveal {
+  opacity: 0;
+  animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes rule-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Checkmark stroke draws itself in when a box becomes checked. */
+@keyframes draw {
+  from { stroke-dashoffset: 26; }
+  to { stroke-dashoffset: 0; }
+}
+.check-path {
+  stroke-dasharray: 26;
+  animation: draw 0.3s ease-out both;
+}
+
+/* Slow breathing halo around the running focus timer. */
+@keyframes timer-breathe {
+  0%, 100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 30%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 16px transparent;
+  }
+}
+.timer-running {
+  animation: timer-breathe 2.6s ease-in-out infinite;
+}
+
+/* One-shot accent halo when a set is completed. */
+@keyframes bloom {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 35%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 20px transparent;
+  }
+}
+.celebrate-bloom {
+  animation: bloom 1.2s ease-out;
+}
+
+/* Popup toast slides down + fades in. */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.toast-enter {
+  animation: toast-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Confetti pieces drift down and fade for the perfect-day finale. */
+@keyframes confetti-fall {
+  0% { opacity: 1; transform: translate(0, -10vh) rotate(0deg); }
+  100% {
+    opacity: 0;
+    transform: translate(var(--drift, 0), 100vh) rotate(540deg);
+  }
+}
+.confetti-piece {
+  position: fixed;
+  top: 0;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  animation: confetti-fall 1.6s ease-in forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .check-path,
+  .timer-running,
+  .section-title::after,
+  .animate-shake,
+  .celebrate-bloom,
+  .toast-enter,
+  .confetti-piece {
+    animation: none;
+  }
+  .reveal { opacity: 1; }
+  .card:hover { transform: none; }
 }
