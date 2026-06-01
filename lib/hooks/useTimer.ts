@@ -93,6 +93,12 @@ export function useTimer(
     [effectiveStart, frozenElapsed, phase, supabase, userId],
   );
 
+  // Keep today's running total in sync when a session logged today is deleted
+  // from the history view (delta is negative).
+  const adjustToday = useCallback((delta: number) => {
+    setTodaySeconds((s) => Math.max(0, s + delta));
+  }, []);
+
   const cancel = useCallback(async () => {
     setPhase("idle");
     setEffectiveStart(null);
@@ -115,5 +121,6 @@ export function useTimer(
     resume,
     stop,
     cancel,
+    adjustToday,
   };
 }

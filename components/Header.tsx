@@ -39,7 +39,7 @@ export function Header({
     <header className="flex items-start justify-between">
       <div>
         <h1 className="font-serif text-3xl font-semibold leading-tight sm:text-4xl">
-          {formatHeaderDate(timezone)}
+          {now ? formatHeaderDate(timezone, now) : ""}
           {now ? ` · ${formatTime24InTz(timezone, now)}` : ""}
         </h1>
         <p className="mt-1 text-sm text-muted">

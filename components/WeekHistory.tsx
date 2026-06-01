@@ -1,24 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { runOrQueue } from "@/lib/offline-queue";
+import type { FocusSession } from "@/lib/types";
 import {
   hoursLabel,
   addWeeks,
   weekDatesFromStart,
   formatWeekRange,
+  formatDayLabel,
+  formatMinutes,
+  formatTime24InTz,
 } from "@/lib/utils";
 
 const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 
 type Props = {
   userId: string;
+  timezone: string;
+  today: string;
   currentWeekStart: string;
   weekDates: string[];
   weekFocusByDate: Record<string, number>;
   completedTaskDates: string[];
   weekHabitsDone: number;
   totalHabitsPerWeek: number;
+  onTodaySessionDeleted: (seconds: number) => void;
 };
 
 type WeekData = {
@@ -27,16 +35,28 @@ type WeekData = {
   focusByDate: Record<string, number>;
   completedTaskDates: string[];
   weekHabitsDone: number;
+  sessions: FocusSession[];
 };
+
+function byDate(sessions: FocusSession[]): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const s of sessions) {
+    out[s.date] = (out[s.date] ?? 0) + s.duration_seconds;
+  }
+  return out;
+}
 
 export function WeekHistory({
   userId,
+  timezone,
+  today,
   currentWeekStart,
   weekDates,
   weekFocusByDate,
   completedTaskDates,
   weekHabitsDone,
   totalHabitsPerWeek,
+  onTodaySessionDeleted,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [supabase] = useState(() => createClient());
@@ -46,15 +66,60 @@ export function WeekHistory({
   // every render so live edits (habits/tasks/focus) stay in sync.
   const [viewWeekStart, setViewWeekStart] = useState(currentWeekStart);
   const [pastData, setPastData] = useState<WeekData | null>(null);
+  // The current week's individual sessions are fetched lazily (props only carry
+  // per-day aggregates). `currentLoaded` gates deriving dots from them so we
+  // don't flash an empty week before the fetch lands.
+  const [currentSessions, setCurrentSessions] = useState<FocusSession[]>([]);
+  const [currentLoaded, setCurrentLoaded] = useState(false);
+  // Ids deleted this session, so a racing refetch can't resurrect them.
+  const deletedIds = useRef<Set<string>>(new Set());
+
+  const isViewingCurrent = viewWeekStart === currentWeekStart || !pastData;
+  const todayFocus = weekFocusByDate[today] ?? 0;
+
+  // Fetch the current week's sessions when the panel is open. Re-runs when
+  // today's focus total changes (a session was logged or deleted) so the list
+  // stays current.
+  useEffect(() => {
+    if (!open || viewWeekStart !== currentWeekStart) return;
+    let cancelled = false;
+    const weekEnd = addWeeks(currentWeekStart, 1);
+    supabase
+      .from("focus_sessions")
+      .select("id, started_at, duration_seconds, label, date")
+      .eq("user_id", userId)
+      .gte("date", currentWeekStart)
+      .lt("date", weekEnd)
+      .then(({ data }) => {
+        if (cancelled) return;
+        setCurrentSessions(
+          ((data ?? []) as FocusSession[]).filter(
+            (s) => !deletedIds.current.has(s.id),
+          ),
+        );
+        setCurrentLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, viewWeekStart, currentWeekStart, todayFocus, supabase, userId]);
+
+  // Current-week dots come from the fetched sessions once loaded (so deletes
+  // reflect immediately on every day), but today is overlaid from props so a
+  // freshly-logged session shows without waiting on the refetch.
+  const currentFocusByDate = currentLoaded
+    ? { ...byDate(currentSessions), [today]: todayFocus }
+    : weekFocusByDate;
 
   const view: WeekData =
     viewWeekStart === currentWeekStart || !pastData
       ? {
           weekStart: currentWeekStart,
           weekDates,
-          focusByDate: weekFocusByDate,
+          focusByDate: currentFocusByDate,
           completedTaskDates,
           weekHabitsDone,
+          sessions: currentSessions,
         }
       : pastData;
 
@@ -70,7 +135,7 @@ export function WeekHistory({
     const [focusRes, tasksRes, logsRes] = await Promise.all([
       supabase
         .from("focus_sessions")
-        .select("duration_seconds, date")
+        .select("id, started_at, duration_seconds, label, date")
         .eq("user_id", userId)
         .gte("date", weekStart)
         .lt("date", weekEnd),
@@ -90,13 +155,9 @@ export function WeekHistory({
         .lt("date", weekEnd),
     ]);
 
-    const focusByDate: Record<string, number> = {};
-    for (const r of (focusRes.data ?? []) as {
-      duration_seconds: number;
-      date: string;
-    }[]) {
-      focusByDate[r.date] = (focusByDate[r.date] ?? 0) + r.duration_seconds;
-    }
+    const sessions = ((focusRes.data ?? []) as FocusSession[]).filter(
+      (s) => !deletedIds.current.has(s.id),
+    );
     const taskDates = Array.from(
       new Set(((tasksRes.data ?? []) as { date: string }[]).map((r) => r.date)),
     );
@@ -104,12 +165,32 @@ export function WeekHistory({
     setPastData({
       weekStart,
       weekDates: dates,
-      focusByDate,
+      focusByDate: byDate(sessions),
       completedTaskDates: taskDates,
       weekHabitsDone: (logsRes.data ?? []).length,
+      sessions,
     });
     setViewWeekStart(weekStart);
     setLoading(false);
+  }
+
+  async function deleteSession(s: FocusSession) {
+    deletedIds.current.add(s.id);
+    if (isViewingCurrent) {
+      setCurrentSessions((arr) => arr.filter((x) => x.id !== s.id));
+    } else {
+      setPastData((pd) => {
+        if (!pd) return pd;
+        const sessions = pd.sessions.filter((x) => x.id !== s.id);
+        return { ...pd, sessions, focusByDate: byDate(sessions) };
+      });
+    }
+    if (s.date === today) onTodaySessionDeleted(s.duration_seconds);
+    await runOrQueue(supabase, {
+      table: "focus_sessions",
+      op: "delete",
+      match: { id: s.id },
+    });
   }
 
   const completedSet = new Set(view.completedTaskDates);
@@ -119,6 +200,10 @@ export function WeekHistory({
   const completedDays = filled.filter(Boolean).length;
   const totalFocus = Object.values(view.focusByDate).reduce((a, b) => a + b, 0);
   const isCurrent = view.weekStart === currentWeekStart;
+
+  const sortedSessions = [...view.sessions].sort((a, b) =>
+    a.started_at < b.started_at ? 1 : a.started_at > b.started_at ? -1 : 0,
+  );
 
   return (
     <section>
@@ -180,6 +265,49 @@ export function WeekHistory({
               {completedDays}/7 completed · {hoursLabel(totalFocus)} focused ·{" "}
               {view.weekHabitsDone}/{totalHabitsPerWeek} habits
             </p>
+
+            <div className={`mt-5 border-t border-border pt-4 ${loading ? "opacity-40" : ""}`}>
+              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">
+                Focus sessions
+              </p>
+              {sortedSessions.length === 0 ? (
+                <p className="text-sm text-muted">No sessions logged.</p>
+              ) : (
+                <ul className="flex flex-col gap-2">
+                  {sortedSessions.map((s) => (
+                    <li
+                      key={s.id}
+                      className="group flex items-center justify-between gap-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm">{s.label || "Focus"}</p>
+                        <p className="text-xs text-muted">
+                          {formatDayLabel(s.date)} ·{" "}
+                          {formatTime24InTz(
+                            timezone,
+                            new Date(s.started_at).getTime(),
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <span className="text-sm tabular-nums text-muted">
+                          {formatMinutes(s.duration_seconds)}
+                        </span>
+                        <button
+                          onClick={() => deleteSession(s)}
+                          aria-label="Delete session"
+                          className="press flex h-7 w-7 items-center justify-center rounded-md text-muted opacity-0 transition-opacity hover:bg-tint-strong hover:text-text group-hover:opacity-100"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                          </svg>
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
       </div>

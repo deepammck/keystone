@@ -174,12 +174,15 @@ export function Dashboard(props: Props) {
         <div className="reveal" style={{ animationDelay: "0.27s" }}>
           <WeekHistory
             userId={props.userId}
+            timezone={props.timezone}
+            today={props.today}
             currentWeekStart={props.weekStart}
             weekDates={props.weekDates}
             weekFocusByDate={liveWeekFocusByDate}
             completedTaskDates={liveCompletedTaskDates}
             weekHabitsDone={liveWeekHabitsDone}
             totalHabitsPerWeek={props.habits.length * 7}
+            onTodaySessionDeleted={(seconds) => timer.adjustToday(-seconds)}
           />
         </div>
       </div>

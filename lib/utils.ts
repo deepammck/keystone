@@ -30,9 +30,10 @@ export function weekDatesInTz(timezone: string): string[] {
   );
 }
 
-// "Thursday, May 28"
-export function formatHeaderDate(timezone: string): string {
-  return format(new TZDate(new Date(), timezone), "EEEE, MMMM d");
+// "Thursday, May 28". `nowMs` is passed in so Date is never read during render
+// (mirrors formatTime24InTz).
+export function formatHeaderDate(timezone: string, nowMs: number): string {
+  return format(new TZDate(nowMs, timezone), "EEEE, MMMM d");
 }
 
 // Minutes since local midnight in the user's tz. `nowMs` is passed in so
