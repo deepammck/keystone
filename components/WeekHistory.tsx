@@ -41,23 +41,27 @@ export function WeekHistory({
   const [open, setOpen] = useState(false);
   const [supabase] = useState(() => createClient());
   const [loading, setLoading] = useState(false);
-  const [view, setView] = useState<WeekData>({
-    weekStart: currentWeekStart,
-    weekDates,
-    focusByDate: weekFocusByDate,
-    completedTaskDates,
-    weekHabitsDone,
-  });
+  // Which week is being viewed, and the fetched data for past weeks only.
+  // The current week is never stored in state — it's derived from props on
+  // every render so live edits (habits/tasks/focus) stay in sync.
+  const [viewWeekStart, setViewWeekStart] = useState(currentWeekStart);
+  const [pastData, setPastData] = useState<WeekData | null>(null);
+
+  const view: WeekData =
+    viewWeekStart === currentWeekStart || !pastData
+      ? {
+          weekStart: currentWeekStart,
+          weekDates,
+          focusByDate: weekFocusByDate,
+          completedTaskDates,
+          weekHabitsDone,
+        }
+      : pastData;
 
   async function goToWeek(weekStart: string) {
     if (weekStart === currentWeekStart) {
-      setView({
-        weekStart: currentWeekStart,
-        weekDates,
-        focusByDate: weekFocusByDate,
-        completedTaskDates,
-        weekHabitsDone,
-      });
+      setViewWeekStart(currentWeekStart);
+      setPastData(null);
       return;
     }
     setLoading(true);
@@ -97,13 +101,14 @@ export function WeekHistory({
       new Set(((tasksRes.data ?? []) as { date: string }[]).map((r) => r.date)),
     );
 
-    setView({
+    setPastData({
       weekStart,
       weekDates: dates,
       focusByDate,
       completedTaskDates: taskDates,
       weekHabitsDone: (logsRes.data ?? []).length,
     });
+    setViewWeekStart(weekStart);
     setLoading(false);
   }
 

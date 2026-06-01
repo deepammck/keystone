@@ -81,6 +81,22 @@ export function Dashboard(props: Props) {
     focusGoalReached,
   });
 
+  // The week stats arrive as a server snapshot from page load. Overlay today's
+  // live values so the "This week" pulse stays in sync as the user toggles
+  // habits, completes tasks, and logs focus during the session.
+  const liveWeekFocusByDate = {
+    ...props.weekFocusByDate,
+    [props.today]: timer.todaySeconds,
+  };
+  const liveCompletedTaskDates = props.completedTaskDates.filter(
+    (d) => d !== props.today,
+  );
+  if (tasks.completedCount > 0) liveCompletedTaskDates.push(props.today);
+  const liveWeekHabitsDone =
+    props.weekHabitsDone -
+    props.initialDoneHabitIds.length +
+    habits.doneCount;
+
   return (
     <main className="relative z-10 mx-auto flex max-w-[1080px] flex-col gap-6 px-5 pb-[calc(env(safe-area-inset-bottom)+3rem)] pt-10 lg:grid lg:grid-cols-2 lg:items-start">
       <div className="reveal lg:col-span-2">
@@ -160,9 +176,9 @@ export function Dashboard(props: Props) {
             userId={props.userId}
             currentWeekStart={props.weekStart}
             weekDates={props.weekDates}
-            weekFocusByDate={props.weekFocusByDate}
-            completedTaskDates={props.completedTaskDates}
-            weekHabitsDone={props.weekHabitsDone}
+            weekFocusByDate={liveWeekFocusByDate}
+            completedTaskDates={liveCompletedTaskDates}
+            weekHabitsDone={liveWeekHabitsDone}
             totalHabitsPerWeek={props.habits.length * 7}
           />
         </div>

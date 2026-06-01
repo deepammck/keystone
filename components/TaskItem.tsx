@@ -59,7 +59,7 @@ export function TaskItem({ task, onToggle, onDelete, onMoveToToday }: Props) {
         </button>
 
         <span
-          className={`min-h-11 flex-1 self-center py-2 leading-tight transition-opacity ${
+          className={`flex min-h-11 flex-1 items-center py-2 leading-tight transition-opacity ${
             task.completed ? "text-muted line-through opacity-50" : ""
           }`}
         >
