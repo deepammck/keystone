@@ -145,24 +145,28 @@ export function useTasks(
 
   const toggleTask = useCallback(
     async (id: string) => {
-      let nextCompleted = false;
-      const completedAt = () => (nextCompleted ? new Date().toISOString() : null);
+      // Derive the next state synchronously from current state. (Reading it out
+      // of the setTasks updater would be too late — React runs that callback
+      // during the render phase, after the DB payload below is built, so the
+      // write would always persist completed:false and the UI would revert.)
+      const current = tasks.find((t) => t.id === id);
+      if (!current) return;
+      const nextCompleted = !current.completed;
+      const completedAt = nextCompleted ? new Date().toISOString() : null;
       setTasks((prev) =>
-        prev.map((t) => {
-          if (t.id !== id) return t;
-          nextCompleted = !t.completed;
-          return { ...t, completed: nextCompleted, completed_at: completedAt() };
-        }),
+        prev.map((t) =>
+          t.id === id ? { ...t, completed: nextCompleted, completed_at: completedAt } : t,
+        ),
       );
       setLimitMessage("");
       await runOrQueue(supabase, {
         table: "tasks",
         op: "update",
-        payload: { completed: nextCompleted, completed_at: completedAt() },
+        payload: { completed: nextCompleted, completed_at: completedAt },
         match: { id },
       });
     },
-    [supabase],
+    [supabase, tasks],
   );
 
   const deleteTask = useCallback(
