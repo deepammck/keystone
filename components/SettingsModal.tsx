@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Habit } from "@/lib/types";
 
-const THEMES = ["light", "dark", "black"] as const;
+const THEMES = ["light", "dark", "brown"] as const;
 
 const TIMEZONES = [
   { value: "America/New_York", label: "EST" },

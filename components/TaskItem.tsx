@@ -47,7 +47,7 @@ export function TaskItem({ task, onToggle, onDelete, onMoveToToday }: Props) {
           onClick={onToggle}
           className={`press flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition-all duration-150 hover:border-accent ${
             task.completed
-              ? "scale-105 border-accent bg-accent text-bg"
+              ? "scale-105 border-accent bg-accent text-on-accent"
               : "border-muted/50 bg-transparent"
           }`}
         >

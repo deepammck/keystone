@@ -67,7 +67,7 @@ export function FocusTimer({
     >
       <div
         className={`text-5xl font-semibold tabular-nums tracking-tight transition-colors duration-500 sm:text-6xl ${
-          phase === "running" ? "text-accent" : ""
+          phase === "running" ? "text-accent-soft" : ""
         }`}
       >
         {formatClock(elapsed)}
@@ -95,7 +95,7 @@ export function FocusTimer({
           {phase === "idle" && (
             <button
               onClick={onStart}
-              className="press btn-accent min-h-11 rounded-lg bg-accent px-10 font-medium text-bg"
+              className="press btn-accent min-h-11 rounded-lg bg-accent px-10 font-medium text-on-accent"
             >
               Start
             </button>
@@ -104,7 +104,7 @@ export function FocusTimer({
             <>
               <button
                 onClick={phase === "running" ? onPause : onResume}
-                className="press btn-accent min-h-11 rounded-lg bg-accent px-10 font-medium text-bg"
+                className="press btn-accent min-h-11 rounded-lg bg-accent px-10 font-medium text-on-accent"
               >
                 {phase === "running" ? "Pause" : "Resume"}
               </button>

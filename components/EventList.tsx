@@ -61,7 +61,7 @@ export function EventList({ events, onAdd, onDelete, timezone }: Props) {
                   className={`rounded-full border px-2.5 py-0.5 text-xs font-medium tabular-nums transition-colors ${
                     overdue
                       ? "border-red-500/40 text-red-500"
-                      : "border-accent/40 text-accent"
+                      : "border-accent/40 text-accent-soft"
                   }`}
                 >
                   {now === 0 ? "·" : formatCountdown(ev.due_at, now)}
@@ -90,7 +90,7 @@ export function EventList({ events, onAdd, onDelete, timezone }: Props) {
           <DateTimePicker value={due} onChange={setDue} timezone={timezone} />
           <button
             type="submit"
-            className="press btn-accent min-h-11 rounded-lg bg-accent px-6 font-medium text-bg"
+            className="press btn-accent min-h-11 rounded-lg bg-accent px-6 font-medium text-on-accent"
           >
             Add deadline
           </button>

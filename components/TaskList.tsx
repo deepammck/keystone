@@ -70,7 +70,7 @@ export function TaskList({
       </form>
 
       {limitMessage && (
-        <p className="mt-1 text-sm text-accent">{limitMessage}</p>
+        <p className="mt-1 text-sm text-accent-soft">{limitMessage}</p>
       )}
 
       {/* Inbox / upcoming backlog */}

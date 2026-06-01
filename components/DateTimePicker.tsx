@@ -140,10 +140,10 @@ export function DateTimePicker({ value, onChange, timezone }: Props) {
                   onClick={() => pickDay(day)}
                   className={`press flex h-9 items-center justify-center rounded-md border text-sm transition-all duration-150 ${
                     isSelected
-                      ? "border-accent bg-accent font-medium text-bg"
+                      ? "border-accent bg-accent font-medium text-on-accent"
                       : `border-transparent hover:border-accent/50 ${
                           inMonth ? "text-text" : "text-muted/50"
-                        } ${isToday ? "text-accent" : ""}`
+                        } ${isToday ? "text-accent-soft" : ""}`
                   }`}
                 >
                   {day.getDate()}

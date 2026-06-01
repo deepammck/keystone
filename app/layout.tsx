@@ -47,6 +47,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-theme="dark"
+      suppressHydrationWarning
       className={`${playfair.variable} ${dmSans.variable} h-full`}
     >
       <head>

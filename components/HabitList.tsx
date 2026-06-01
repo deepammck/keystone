@@ -26,7 +26,7 @@ export function HabitList({ habits, doneIds, onToggle }: Props) {
                 <span
                   className={`press flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition-all duration-150 group-hover:border-accent ${
                     done
-                      ? "scale-105 border-accent bg-accent text-bg"
+                      ? "scale-105 border-accent bg-accent text-on-accent"
                       : "border-muted/50 bg-transparent"
                   }`}
                 >
