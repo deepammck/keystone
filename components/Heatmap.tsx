@@ -138,10 +138,41 @@ export function Heatmap({
     return points === 0 ? 0 : Math.min(4, Math.ceil((points / 3) * 4));
   }
 
+  // Sum of tasks + focus across a list of dates (capped at today, so future
+  // cells never contribute). Pure over props + the loaded `stats`.
+  function totalsFor(dates: string[]): { tasks: number; focusSeconds: number } {
+    let tasks = 0;
+    let focusSeconds = 0;
+    for (const d of dates) {
+      if (d > today) continue;
+      const s = dayStats(d);
+      tasks += s.tasks;
+      focusSeconds += s.focusSeconds;
+    }
+    return { tasks, focusSeconds };
+  }
+
+  // Consecutive active days ending at `today`. Only meaningful when the current
+  // window is in view (today is the newest loaded day).
+  const allDates = weeks.flat();
+  const streak = (() => {
+    let count = 0;
+    for (let i = allDates.length - 1; i >= 0; i--) {
+      const d = allDates[i];
+      if (d > today) continue;
+      if (level(dayStats(d)) > 0) count++;
+      else break;
+    }
+    return count;
+  })();
+
+  const thisWeek = totalsFor(weekDatesFromStart(currentWeekStart));
+  const windowTotals = totalsFor(allDates);
+
   return (
     <section>
       <div className="card rounded-2xl bg-tint px-6 py-5">
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between">
           <span className="text-sm font-medium">Progress</span>
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted">
@@ -166,40 +197,66 @@ export function Heatmap({
           </div>
         </div>
 
-        <div className={loading ? "opacity-40 transition-opacity" : "transition-opacity"}>
-          <div className="grid w-max grid-cols-7 gap-1.5">
-            {DAY_LABELS.map((label, i) => (
-              <span key={i} className="w-4 text-center text-[10px] text-muted">
-                {label}
-              </span>
-            ))}
-            {weeks.flatMap((week) =>
-              week.map((d) => {
-                const future = d > today;
-                const s = dayStats(d);
-                const lvl = level(s);
-                return (
-                  <span
-                    key={d}
-                    title={
-                      future
-                        ? formatDayLabel(d)
-                        : `${formatDayLabel(d)} · ${s.tasks} tasks · ${formatMinutes(
-                            s.focusSeconds,
-                          )} · ${s.habits}/${totalHabits} habits`
-                    }
-                    className={`h-4 w-4 rounded transition-all ${
-                      future
-                        ? "border border-border bg-tint-strong opacity-40"
-                        : LEVEL_CLASS[lvl]
-                    }`}
-                  />
-                );
-              }),
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-10">
+          <div className={loading ? "opacity-40 transition-opacity" : "transition-opacity"}>
+            <div className="grid w-max grid-cols-7 gap-1.5">
+              {DAY_LABELS.map((label, i) => (
+                <span key={i} className="w-4 text-center text-[10px] text-muted">
+                  {label}
+                </span>
+              ))}
+              {weeks.flatMap((week) =>
+                week.map((d) => {
+                  const future = d > today;
+                  const s = dayStats(d);
+                  const lvl = level(s);
+                  return (
+                    <span
+                      key={d}
+                      title={
+                        future
+                          ? formatDayLabel(d)
+                          : `${formatDayLabel(d)} · ${s.tasks} tasks · ${formatMinutes(
+                              s.focusSeconds,
+                            )} · ${s.habits}/${totalHabits} habits`
+                      }
+                      className={`h-4 w-4 rounded transition-all ${
+                        future
+                          ? "border border-border bg-tint-strong opacity-40"
+                          : LEVEL_CLASS[lvl]
+                      }`}
+                    />
+                  );
+                }),
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-1 flex-col gap-4">
+            {isCurrentWindow ? (
+              <>
+                <Stat label="Current streak" value={`${streak} ${streak === 1 ? "day" : "days"}`} />
+                <Stat label="This week" value={`${thisWeek.tasks} tasks`} />
+                <Stat label="Focused this week" value={formatMinutes(thisWeek.focusSeconds)} />
+              </>
+            ) : (
+              <>
+                <Stat label="Tasks done" value={`${windowTotals.tasks}`} />
+                <Stat label="Focused" value={formatMinutes(windowTotals.focusSeconds)} />
+              </>
             )}
           </div>
         </div>
       </div>
     </section>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="text-lg font-semibold tabular-nums">{value}</div>
+      <div className="text-xs text-muted">{label}</div>
+    </div>
   );
 }

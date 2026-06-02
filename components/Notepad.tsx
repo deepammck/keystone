@@ -59,7 +59,7 @@ export function Notepad({ userId, today, initialNote }: Props) {
   const isToday = date === today;
 
   return (
-    <section className="card flex flex-col rounded-2xl bg-tint px-6 py-6">
+    <section className="card flex flex-col rounded-2xl bg-tint px-6 py-5">
       <div className="flex items-center justify-between">
         <button
           onClick={() => goTo(addDaysIso(date, -1))}
@@ -93,7 +93,7 @@ export function Notepad({ userId, today, initialNote }: Props) {
         value={content}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Notes for the day…"
-        className="mt-4 min-h-40 flex-1 resize-none rounded-lg bg-bg px-4 py-3 text-sm leading-relaxed outline-none placeholder:text-muted focus:ring-2 focus:ring-accent lg:min-h-64"
+        className="mt-3 min-h-28 flex-1 resize-none rounded-lg bg-bg px-4 py-3 text-sm leading-relaxed outline-none placeholder:text-muted focus:ring-2 focus:ring-accent lg:min-h-40"
       />
     </section>
   );

@@ -2,7 +2,7 @@
 
 ## 1) Hard Rules
 - One page, six sections (tasks, focus timer, habits, deadlines, daily notepad, past-weeks history) — do not add pages, routes, or nav beyond auth.
-- A compact activity heatmap widget sits at the top of the page (under the header) as part of progress display. It is a widget, NOT a seventh section — do not expand it into one or give it its own page/nav.
+- A compact activity heatmap widget sits at the bottom of the left column (below the Tasks/Inbox area) as part of progress display, with a small streak / this-week stats panel beside the grid. It is a widget, NOT a seventh section — do not expand it into one or give it its own page/nav.
 - The Tasks section contains two sub-areas: the Today list and a collapsible "Inbox". Keep them inside the one Tasks `<section>` — don't promote them to top-level sections.
 - Max 5 active *today* tasks; the 6th shows "Finish something first." Inbox is unlimited backlog (`tasks.date = NULL`) and does NOT count toward the limit; `moveToToday` re-checks the limit.
 - Completed today tasks stay inline in their slot, struck through — completion must NOT reorder the list (sorting completed tasks to the bottom caused the "clicking jumps to the lowest task" bug). Order is by `position`/`created_at` only.

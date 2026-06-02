@@ -29,7 +29,7 @@ export function EventList({ events, onAdd, onDelete, timezone }: Props) {
   }
 
   return (
-    <section className="card rounded-2xl bg-tint px-6 py-6">
+    <section className="card rounded-2xl bg-tint px-6 py-5">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="section-title font-serif text-xl font-semibold">Deadlines</h2>
         <button

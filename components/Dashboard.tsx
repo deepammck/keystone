@@ -100,7 +100,7 @@ export function Dashboard(props: Props) {
     habits.doneCount;
 
   return (
-    <main className="relative z-10 mx-auto flex max-w-[1080px] flex-col gap-6 px-5 pb-[calc(env(safe-area-inset-bottom)+3rem)] pt-10 lg:grid lg:max-w-[1240px] lg:grid-cols-2 lg:items-start xl:max-w-[1400px]">
+    <main className="relative z-10 mx-auto flex max-w-[1080px] flex-col gap-5 px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-6 lg:grid lg:max-w-[1240px] lg:grid-cols-2 lg:items-start xl:max-w-[1400px]">
       <div className="reveal lg:col-span-2">
         <OfflineIndicator online={online} />
 
@@ -117,19 +117,7 @@ export function Dashboard(props: Props) {
         />
       </div>
 
-      <div className="reveal lg:col-span-2" style={{ animationDelay: "0.04s" }}>
-        <Heatmap
-          userId={props.userId}
-          today={props.today}
-          currentWeekStart={props.weekStart}
-          totalHabits={habits.total}
-          todayFocusSeconds={timer.todaySeconds}
-          todayTasksCompleted={tasks.completedCount}
-          todayHabitsDone={habits.doneCount}
-        />
-      </div>
-
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         <div className="reveal" style={{ animationDelay: "0.06s" }}>
           <FocusTimer
             phase={timer.phase}
@@ -157,9 +145,21 @@ export function Dashboard(props: Props) {
             onDelete={tasks.deleteTask}
           />
         </div>
+
+        <div className="reveal" style={{ animationDelay: "0.18s" }}>
+          <Heatmap
+            userId={props.userId}
+            today={props.today}
+            currentWeekStart={props.weekStart}
+            totalHabits={habits.total}
+            todayFocusSeconds={timer.todaySeconds}
+            todayTasksCompleted={tasks.completedCount}
+            todayHabitsDone={habits.doneCount}
+          />
+        </div>
       </div>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         <div className="reveal" style={{ animationDelay: "0.09s" }}>
           <HabitList
             habits={props.habits}

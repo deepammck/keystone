@@ -3,15 +3,30 @@
 :root,
 [data-theme="light"] {
   --bg: #ffffff;
-  --text: #000000;
+  --text: #0a0a0a;
   --accent: var(--text);
-  --accent-soft: var(--accent);
+  --accent-soft: #2b2b2b;
   --on-accent: var(--bg);
-  --muted: #666666;
-  --tint: #f2f2f2;
-  --tint-strong: #e6e6e6;
-  --border: rgba(0, 0, 0, 0.12);
-  --shadow: rgba(0, 0, 0, 0.4);
+  --muted: #4b4b4b;
+  --tint: #eeeeee;
+  --tint-strong: #dcdcdc;
+  --border: rgba(0, 0, 0, 0.22);
+  --shadow: rgba(0, 0, 0, 0.45);
+  color-scheme: light;
+}
+
+/* Same as light mode, but the dark tones are warmed to a mocha brown. */
+[data-theme="mocha"] {
+  --bg: #ffffff;
+  --text: #1c130c;
+  --accent: var(--text);
+  --accent-soft: #3a281b;
+  --on-accent: var(--bg);
+  --muted: #5a4a3c;
+  --tint: #eeeeee;
+  --tint-strong: #dcdcdc;
+  --border: rgba(28, 19, 12, 0.22);
+  --shadow: rgba(28, 19, 12, 0.45);
   color-scheme: light;
 }
 
@@ -60,12 +75,12 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
-/* Enlarge everything proportionally on desktop: bumping the root font-size
+/* A gentle root font-size bump on large screens only — kept small so the whole
+   page (all six sections) still fits one viewport without scrolling. The bump
    scales all rem-based fonts, padding, and gaps together. Container width is
    px-based and widened separately in Dashboard.tsx. Mobile/tablet untouched. */
-@media (min-width: 1024px) { html { font-size: 18px; } }  /* +12.5% */
-@media (min-width: 1280px) { html { font-size: 19px; } }  /* +19%   */
-@media (min-width: 1536px) { html { font-size: 20px; } }  /* +25%   */
+@media (min-width: 1280px) { html { font-size: 16.5px; } }  /* +3% */
+@media (min-width: 1536px) { html { font-size: 17px; } }    /* +6% */
 
 body {
   background: var(--bg);
@@ -85,7 +100,8 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   filter: invert(0.7);
   cursor: pointer;
 }
-[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator {
+[data-theme="light"] input[type="time"]::-webkit-calendar-picker-indicator,
+[data-theme="mocha"] input[type="time"]::-webkit-calendar-picker-indicator {
   filter: none;
 }
 
@@ -221,6 +237,31 @@ body::after {
   animation: draw 0.3s ease-out both;
 }
 
+/* Strikethrough that draws across the label when an item is completed. The
+   line is present (scaleX 1) whenever an item is struck; .strike-draw replays
+   the left-to-right wipe only at the moment it's checked off. */
+.strike {
+  position: relative;
+}
+.strike::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 1.5px;
+  width: 100%;
+  background: currentColor;
+  transform-origin: left center;
+  transform: translateY(-50%) scaleX(1);
+}
+.strike.strike-draw::after {
+  animation: strike-draw 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes strike-draw {
+  from { transform: translateY(-50%) scaleX(0); }
+  to { transform: translateY(-50%) scaleX(1); }
+}
+
 /* Slow breathing halo around the running focus timer. */
 @keyframes timer-breathe {
   0%, 100% {
@@ -276,6 +317,7 @@ body::after {
 @media (prefers-reduced-motion: reduce) {
   .reveal,
   .check-path,
+  .strike.strike-draw::after,
   .timer-running,
   .section-title::after,
   .animate-shake,

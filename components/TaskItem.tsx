@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Task } from "@/lib/types";
 
 type Props = {
@@ -12,7 +12,21 @@ type Props = {
 
 export function TaskItem({ task, onToggle, onDelete, onMoveToToday }: Props) {
   const [offset, setOffset] = useState(0);
+  const [pop, setPop] = useState(false);
   const startX = useRef<number | null>(null);
+  const prevCompleted = useRef(task.completed);
+
+  // Fire the completion animation only when the user checks it off — not on
+  // initial mount of an already-completed task.
+  useEffect(() => {
+    if (!prevCompleted.current && task.completed) {
+      setPop(true);
+      const t = setTimeout(() => setPop(false), 360);
+      prevCompleted.current = task.completed;
+      return () => clearTimeout(t);
+    }
+    prevCompleted.current = task.completed;
+  }, [task.completed]);
 
   function onPointerDown(e: React.PointerEvent) {
     if (e.pointerType === "mouse") return; // swipe is touch/pen only
@@ -35,7 +49,7 @@ export function TaskItem({ task, onToggle, onDelete, onMoveToToday }: Props) {
         Delete
       </div>
       <div
-        className="flex items-center gap-3 bg-bg py-2 transition-transform"
+        className="flex min-h-11 items-center gap-3 bg-bg py-1 transition-transform"
         style={{ transform: `translateX(${offset}px)` }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -58,12 +72,14 @@ export function TaskItem({ task, onToggle, onDelete, onMoveToToday }: Props) {
           )}
         </button>
 
-        <span
-          className={`flex min-h-11 flex-1 items-center py-2 leading-tight transition-opacity ${
-            task.completed ? "text-muted line-through opacity-50" : ""
-          }`}
-        >
-          {task.text}
+        <span className="flex-1 leading-tight">
+          <span
+            className={`inline transition-opacity ${
+              task.completed ? "strike text-muted opacity-50" : ""
+            } ${pop ? "strike-draw" : ""}`}
+          >
+            {task.text}
+          </span>
         </span>
 
         {onMoveToToday && (

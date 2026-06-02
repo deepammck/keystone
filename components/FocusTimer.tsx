@@ -61,12 +61,12 @@ export function FocusTimer({
 
   return (
     <section
-      className={`card rounded-2xl bg-tint px-6 py-8 text-center ${
+      className={`card rounded-2xl bg-tint px-6 py-5 text-center ${
         phase === "running" ? "timer-running" : ""
       } ${celebrating ? "celebrate-bloom" : ""}`}
     >
       <div
-        className={`text-5xl font-semibold tabular-nums tracking-tight transition-colors duration-500 sm:text-6xl ${
+        className={`text-4xl font-semibold tabular-nums tracking-tight transition-colors duration-500 sm:text-5xl ${
           phase === "running" ? "text-accent-soft" : ""
         }`}
       >
@@ -74,7 +74,7 @@ export function FocusTimer({
       </div>
 
       {labeling ? (
-        <div className="mt-6 flex flex-col items-center gap-3">
+        <div className="mt-4 flex flex-col items-center gap-3">
           <input
             autoFocus
             value={label}
@@ -91,7 +91,7 @@ export function FocusTimer({
           </button>
         </div>
       ) : (
-        <div className="mt-6 flex flex-col items-center gap-2">
+        <div className="mt-6 flex flex-col items-center gap-3">
           {phase === "idle" && (
             <button
               onClick={onStart}
