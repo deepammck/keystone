@@ -14,19 +14,25 @@ export function TaskItem({ task, onToggle, onDelete, onMoveToToday }: Props) {
   const [offset, setOffset] = useState(0);
   const [pop, setPop] = useState(false);
   const startX = useRef<number | null>(null);
-  const prevCompleted = useRef(task.completed);
+  const [prevCompleted, setPrevCompleted] = useState(task.completed);
 
-  // Fire the completion animation only when the user checks it off — not on
-  // initial mount of an already-completed task.
+  // Detect the incomplete→complete transition *during render* so the `strike`
+  // and `strike-draw` classes land in the SAME commit. Doing this in an effect
+  // applied `strike` first (its static full-width line painted instantly — the
+  // "flash") and only added the draw animation on a later render, so the wipe
+  // never showed. Adjusting state during render is the supported React pattern
+  // for reacting to a prop change; the guard keeps it from looping.
+  if (prevCompleted !== task.completed) {
+    setPrevCompleted(task.completed);
+    if (task.completed) setPop(true);
+  }
+
+  // Pull the one-shot animation class back off once the wipe has finished.
   useEffect(() => {
-    if (!prevCompleted.current && task.completed) {
-      setPop(true);
-      const t = setTimeout(() => setPop(false), 360);
-      prevCompleted.current = task.completed;
-      return () => clearTimeout(t);
-    }
-    prevCompleted.current = task.completed;
-  }, [task.completed]);
+    if (!pop) return;
+    const t = setTimeout(() => setPop(false), 360);
+    return () => clearTimeout(t);
+  }, [pop]);
 
   function onPointerDown(e: React.PointerEvent) {
     if (e.pointerType === "mouse") return; // swipe is touch/pen only
@@ -59,7 +65,7 @@ export function TaskItem({ task, onToggle, onDelete, onMoveToToday }: Props) {
         <button
           aria-label={task.completed ? "Mark incomplete" : "Mark complete"}
           onClick={onToggle}
-          className={`press flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition-all duration-150 hover:border-accent ${
+          className={`press flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition-[transform,background-color,border-color] duration-150 hover:border-accent ${
             task.completed
               ? "scale-105 border-accent bg-accent text-on-accent"
               : "border-muted/50 bg-transparent"

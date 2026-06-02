@@ -255,6 +255,9 @@ body::after {
   transform: translateY(-50%) scaleX(1);
 }
 .strike.strike-draw::after {
+  /* Promote the line to its own GPU layer for the duration of the wipe so the
+     text underneath isn't repainted every frame (the source of the jank). */
+  will-change: transform;
   animation: strike-draw 0.34s cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes strike-draw {
