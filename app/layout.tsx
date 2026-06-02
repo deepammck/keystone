@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { ServiceWorker } from "@/components/ServiceWorker";
+import { Agentation } from "agentation";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -60,6 +61,7 @@ export default function RootLayout({
       <body className="min-h-full">
         {children}
         <ServiceWorker />
+        {process.env.NODE_ENV === "development" && <Agentation />}
       </body>
     </html>
   );
