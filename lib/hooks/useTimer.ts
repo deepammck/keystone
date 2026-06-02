@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { runOrQueue } from "@/lib/offline-queue";
+import { dateInTz } from "@/lib/utils";
 
 type Phase = "idle" | "running" | "paused";
 
@@ -14,6 +15,7 @@ export function useTimer(
   userId: string,
   initialStartedAt: string | null,
   initialTodaySeconds: number,
+  timezone: string,
 ) {
   const [phase, setPhase] = useState<Phase>(
     initialStartedAt ? "running" : "idle",
@@ -62,9 +64,9 @@ export function useTimer(
         phase === "running" && effectiveStart != null
           ? Math.floor((Date.now() - effectiveStart) / 1000)
           : frozenElapsed;
-      const startedAtIso = new Date(
-        effectiveStart ?? Date.now() - seconds * 1000,
-      ).toISOString();
+      const startMs = effectiveStart ?? Date.now() - seconds * 1000;
+      const startedAtIso = new Date(startMs).toISOString();
+      const sessionDate = dateInTz(startMs, timezone);
 
       setPhase("idle");
       setEffectiveStart(null);
@@ -80,6 +82,7 @@ export function useTimer(
             started_at: startedAtIso,
             duration_seconds: seconds,
             label: label.trim() || null,
+            date: sessionDate,
           },
         });
       }
@@ -90,7 +93,7 @@ export function useTimer(
         match: { id: userId },
       });
     },
-    [effectiveStart, frozenElapsed, phase, supabase, userId],
+    [effectiveStart, frozenElapsed, phase, supabase, userId, timezone],
   );
 
   // Keep today's running total in sync when a session logged today is deleted

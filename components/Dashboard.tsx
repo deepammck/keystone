@@ -15,6 +15,7 @@ import { HabitList } from "@/components/HabitList";
 import { Notepad } from "@/components/Notepad";
 import { EventList } from "@/components/EventList";
 import { WeekHistory } from "@/components/WeekHistory";
+import { Heatmap } from "@/components/Heatmap";
 import { SettingsModal } from "@/components/SettingsModal";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { CelebrationToast } from "@/components/CelebrationToast";
@@ -57,6 +58,7 @@ export function Dashboard(props: Props) {
     props.userId,
     props.timerStartedAt,
     props.initialTodaySeconds,
+    props.timezone,
   );
   const habits = useHabits(
     props.habits,
@@ -98,7 +100,7 @@ export function Dashboard(props: Props) {
     habits.doneCount;
 
   return (
-    <main className="relative z-10 mx-auto flex max-w-[1080px] flex-col gap-6 px-5 pb-[calc(env(safe-area-inset-bottom)+3rem)] pt-10 lg:grid lg:grid-cols-2 lg:items-start">
+    <main className="relative z-10 mx-auto flex max-w-[1080px] flex-col gap-6 px-5 pb-[calc(env(safe-area-inset-bottom)+3rem)] pt-10 lg:grid lg:max-w-[1240px] lg:grid-cols-2 lg:items-start xl:max-w-[1400px]">
       <div className="reveal lg:col-span-2">
         <OfflineIndicator online={online} />
 
@@ -112,6 +114,18 @@ export function Dashboard(props: Props) {
           wakeMinute={props.wakeMinute}
           sleepMinute={props.sleepMinute}
           onOpenSettings={() => setSettingsOpen(true)}
+        />
+      </div>
+
+      <div className="reveal lg:col-span-2" style={{ animationDelay: "0.04s" }}>
+        <Heatmap
+          userId={props.userId}
+          today={props.today}
+          currentWeekStart={props.weekStart}
+          totalHabits={habits.total}
+          todayFocusSeconds={timer.todaySeconds}
+          todayTasksCompleted={tasks.completedCount}
+          todayHabitsDone={habits.doneCount}
         />
       </div>
 

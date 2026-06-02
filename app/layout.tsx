@@ -53,7 +53,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("keystone:theme");if(t)document.documentElement.dataset.theme=t;}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem("keystone:theme");if(t==="black"){t="brown";localStorage.setItem("keystone:theme","brown");}if(t)document.documentElement.dataset.theme=t;}catch(e){}})();`,
           }}
         />
       </head>
