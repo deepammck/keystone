@@ -41,12 +41,16 @@ export function TaskList({
     setInboxDraft("");
   }
 
+  const empty = tasks.length === 0;
+
   return (
     <section className="flex flex-col gap-1">
       <h2 className="section-title mb-2 font-serif text-xl font-semibold">Today</h2>
 
-      {tasks.length === 0 && (
-        <p className="py-2 text-sm text-muted">Nothing yet. Add a task below.</p>
+      {empty && (
+        <p className="py-2 font-serif text-base text-text/80">
+          What&apos;s the one thing today?
+        </p>
       )}
 
       <ul className="flex flex-col">
@@ -62,10 +66,15 @@ export function TaskList({
 
       <form onSubmit={submit} className="mt-2">
         <input
+          // An empty Today is the highest-intent moment — drop the cursor in the
+          // field on load so the user can just start typing.
+          autoFocus={empty}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder="Add a task…"
-          className="min-h-11 w-full rounded-lg bg-tint px-4 outline-none placeholder:text-muted focus:ring-2 focus:ring-accent"
+          className={`min-h-11 w-full rounded-lg bg-tint px-4 outline-none placeholder:text-muted focus:ring-2 focus:ring-accent ${
+            empty ? "text-base ring-1 ring-border" : ""
+          }`}
         />
       </form>
 

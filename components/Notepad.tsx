@@ -14,6 +14,9 @@ type Props = {
 export function Notepad({ userId, today, initialNote }: Props) {
   const [date, setDate] = useState(today);
   const [content, setContent] = useState(initialNote);
+  // Preview of the day-before's note, surfaced only while the current page is
+  // blank so returning users get continuity instead of a void.
+  const [prevNote, setPrevNote] = useState("");
   const [supabase] = useState(() => createClient());
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -22,6 +25,23 @@ export function Notepad({ userId, today, initialNote }: Props) {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
   }, []);
+
+  // Pull in the prior day's note whenever the viewed day changes.
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("daily_notes")
+      .select("content")
+      .eq("user_id", userId)
+      .eq("date", addDaysIso(date, -1))
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) setPrevNote(data?.content ?? "");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, userId, date]);
 
   // Flush any pending save, then load the note for a different day.
   async function goTo(nextDate: string) {
@@ -89,11 +109,23 @@ export function Notepad({ userId, today, initialNote }: Props) {
         </button>
       </div>
 
+      {content.trim() === "" && (
+        <p className="mt-2 truncate text-xs text-muted/80">
+          {prevNote.trim() ? (
+            <>
+              Yesterday — <span className="italic">{prevNote}</span>
+            </>
+          ) : (
+            "A blank page. What happened today?"
+          )}
+        </p>
+      )}
+
       <textarea
         value={content}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Notes for the day…"
-        className="mt-3 min-h-28 flex-1 resize-none rounded-lg bg-bg px-4 py-3 text-sm leading-relaxed outline-none placeholder:text-muted focus:ring-2 focus:ring-accent lg:min-h-40"
+        className="notepad-paper mt-3 min-h-28 flex-1 resize-none rounded-lg bg-bg px-4 py-3 text-sm leading-7 outline-none placeholder:text-muted focus:ring-2 focus:ring-accent lg:min-h-40"
       />
     </section>
   );

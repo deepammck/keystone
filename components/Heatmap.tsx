@@ -232,17 +232,37 @@ export function Heatmap({
             </div>
           </div>
 
-          <div className="flex flex-1 flex-col gap-4">
+          {/* sm:mt-5 drops the stat column below the day-label row so its first
+              baseline lines up with the grid's top row of cells. */}
+          <div className="flex flex-1 flex-col gap-4 sm:mt-5">
             {isCurrentWindow ? (
               <>
-                <Stat label="Current streak" value={`${streak} ${streak === 1 ? "day" : "days"}`} />
-                <Stat label="This week" value={`${thisWeek.tasks} tasks`} />
-                <Stat label="Focused this week" value={formatMinutes(thisWeek.focusSeconds)} />
+                {streak > 0 ? (
+                  <Stat
+                    icon={<FlameIcon />}
+                    label="Current streak"
+                    value={`${streak} ${streak === 1 ? "day" : "days"}`}
+                    accent
+                  />
+                ) : (
+                  <div className="flex items-start gap-2.5">
+                    <span className="mt-0.5 text-muted">
+                      <FlameIcon />
+                    </span>
+                    <div className="text-sm text-muted">Start a streak today</div>
+                  </div>
+                )}
+                <Stat icon={<CheckIcon />} label="This week" value={`${thisWeek.tasks} tasks`} />
+                <Stat
+                  icon={<ClockIcon />}
+                  label="Focused this week"
+                  value={formatMinutes(thisWeek.focusSeconds)}
+                />
               </>
             ) : (
               <>
-                <Stat label="Tasks done" value={`${windowTotals.tasks}`} />
-                <Stat label="Focused" value={formatMinutes(windowTotals.focusSeconds)} />
+                <Stat icon={<CheckIcon />} label="Tasks done" value={`${windowTotals.tasks}`} />
+                <Stat icon={<ClockIcon />} label="Focused" value={formatMinutes(windowTotals.focusSeconds)} />
               </>
             )}
           </div>
@@ -252,11 +272,55 @@ export function Heatmap({
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+// A unit-appropriate glyph + a label under the number so the eye can tell
+// streak (flame) from count (check) from duration (clock) at a glance.
+function Stat({
+  icon,
+  label,
+  value,
+  accent = false,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
   return (
-    <div>
-      <div className="text-lg font-semibold tabular-nums">{value}</div>
-      <div className="text-xs text-muted">{label}</div>
+    <div className="flex items-start gap-2.5">
+      <span className="mt-0.5 text-muted">{icon}</span>
+      <div>
+        <div
+          className={`text-lg font-semibold tabular-nums ${accent ? "text-accent-soft" : ""}`}
+        >
+          {value}
+        </div>
+        <div className="text-xs text-muted">{label}</div>
+      </div>
     </div>
+  );
+}
+
+function FlameIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M12 2c1 3-1 4-1 6a3 3 0 0 0 6 0c0-1 0-2-.5-3 2 1.5 3.5 4 3.5 7a8 8 0 0 1-16 0c0-3.5 2.5-6 4-8 .5 1.5 1.5 2 2 3 .5-1.5 0-3-2-5z" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden>
+      <path d="M5 13l4 4L19 7" />
+    </svg>
+  );
+}
+
+function ClockIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
   );
 }

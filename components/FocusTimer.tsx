@@ -59,6 +59,30 @@ export function FocusTimer({
     setLabeling(false);
   }
 
+  // At rest the card collapses around a hero "Start" button — no dominant empty
+  // 00:00. The tall, breathing treatment is reserved for an actual session.
+  if (phase === "idle") {
+    return (
+      <section
+        className={`card flex flex-col items-center gap-3 rounded-2xl bg-tint px-6 py-6 text-center ${
+          celebrating ? "celebrate-bloom" : ""
+        }`}
+      >
+        <p className="text-sm text-muted">Ready to focus?</p>
+        <button
+          onClick={onStart}
+          className="press btn-accent flex min-h-12 items-center gap-2 rounded-xl bg-accent px-12 text-base font-semibold text-on-accent"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+            <path d="M7 5v14l12-7z" />
+          </svg>
+          Start
+        </button>
+        <p className="text-xs text-muted">{formatMinutes(todaySeconds)} today</p>
+      </section>
+    );
+  }
+
   return (
     <section
       className={`card rounded-2xl bg-tint px-6 py-5 text-center ${
@@ -92,38 +116,26 @@ export function FocusTimer({
         </div>
       ) : (
         <div className="mt-6 flex flex-col items-center gap-3">
-          {phase === "idle" && (
+          <button
+            onClick={phase === "running" ? onPause : onResume}
+            className="press btn-accent min-h-11 rounded-lg bg-accent px-10 font-medium text-on-accent"
+          >
+            {phase === "running" ? "Pause" : "Resume"}
+          </button>
+          <div className="flex gap-3">
             <button
-              onClick={onStart}
-              className="press btn-accent min-h-11 rounded-lg bg-accent px-10 font-medium text-on-accent"
+              onClick={() => setLabeling(true)}
+              className="press min-h-11 rounded-lg border border-border px-6 text-sm font-medium hover:bg-tint-strong"
             >
-              Start
+              Log
             </button>
-          )}
-          {phase !== "idle" && (
-            <>
-              <button
-                onClick={phase === "running" ? onPause : onResume}
-                className="press btn-accent min-h-11 rounded-lg bg-accent px-10 font-medium text-on-accent"
-              >
-                {phase === "running" ? "Pause" : "Resume"}
-              </button>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setLabeling(true)}
-                  className="press min-h-11 rounded-lg border border-border px-6 text-sm font-medium hover:bg-tint-strong"
-                >
-                  Log
-                </button>
-                <button
-                  onClick={onCancel}
-                  className="press min-h-11 rounded-lg border border-border px-6 text-sm font-medium text-muted hover:bg-tint-strong hover:text-text"
-                >
-                  Cancel
-                </button>
-              </div>
-            </>
-          )}
+            <button
+              onClick={onCancel}
+              className="press min-h-11 rounded-lg border border-border px-6 text-sm font-medium text-muted hover:bg-tint-strong hover:text-text"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
 

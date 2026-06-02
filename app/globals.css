@@ -161,6 +161,15 @@ body::after {
     0 18px 40px -22px var(--shadow);
 }
 
+/* Faint dot-grid so the notepad reads as a page rather than an inert slab.
+   Uses the theme border tint, so it stays subtle in every theme. The pattern
+   scrolls with the text (local background) like real paper. */
+.notepad-paper {
+  background-image: radial-gradient(var(--border) 1px, transparent 1px);
+  background-size: 18px 18px;
+  background-position: 0 7px;
+}
+
 /* Section heading with a short gold rule underneath as an editorial marker. */
 .section-title {
   position: relative;
@@ -265,6 +274,16 @@ body::after {
   to { transform: translateY(-50%) scaleX(1); }
 }
 
+/* A satisfying overshoot pop when a habit checkbox is marked done. */
+@keyframes habit-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.28); }
+  100% { transform: scale(1.05); }
+}
+.habit-pop {
+  animation: habit-pop 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
 /* Slow breathing halo around the running focus timer. */
 @keyframes timer-breathe {
   0%, 100% {
@@ -321,6 +340,7 @@ body::after {
   .reveal,
   .check-path,
   .strike.strike-draw::after,
+  .habit-pop,
   .timer-running,
   .section-title::after,
   .animate-shake,

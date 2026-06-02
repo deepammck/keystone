@@ -106,6 +106,13 @@ export function formatDayLabel(dateStr: string): string {
   return format(parseISO(dateStr), "EEE, MMM d");
 }
 
+// Long display label for an ISO date string, e.g. "Tuesday, June 2". Derived
+// from the canonical `today` so the header and Notepad never disagree on which
+// day it is (the live clock still ticks the time separately).
+export function formatLongDate(dateStr: string): string {
+  return format(parseISO(dateStr), "EEEE, MMMM d");
+}
+
 // Shift an ISO date string by `delta` days (negative = earlier).
 export function addDaysIso(dateStr: string, delta: number): string {
   return format(addDays(parseISO(dateStr), delta), "yyyy-MM-dd");

@@ -59,6 +59,7 @@ export function seedLocal(timezone: string) {
       wake_minute: 420,
       sleep_minute: 1380,
       focus_goal_minutes: 60,
+      theme: "dark",
       created_at: new Date().toISOString(),
     });
   }
@@ -349,5 +350,6 @@ export function loadLocalInitial(timezone: string) {
     wakeMinute: (profile?.wake_minute as number) ?? 420,
     sleepMinute: (profile?.sleep_minute as number) ?? 1380,
     focusGoalMinutes: (profile?.focus_goal_minutes as number) ?? 60,
+    theme: (profile?.theme as string) ?? "dark",
   };
 }

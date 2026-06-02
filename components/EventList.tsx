@@ -44,36 +44,41 @@ export function EventList({ events, onAdd, onDelete, timezone }: Props) {
         <p className="py-1 text-sm text-muted">Nothing on the horizon.</p>
       )}
 
-      <ul className="flex flex-col gap-2">
+      <ul className="flex flex-col gap-2.5">
         {events.map((ev) => {
-          const overdue = now > 0 && new Date(ev.due_at).getTime() <= now;
+          // The remaining time is the whole point of a deadline, so it leads:
+          // pulled left, scaled up, and color-coded by how soon it lands.
+          const diffMs =
+            now > 0 ? new Date(ev.due_at).getTime() - now : Infinity;
+          const urgency =
+            diffMs <= 0
+              ? "text-red-500"
+              : diffMs < 24 * 3600_000
+                ? "text-red-500"
+                : diffMs < 7 * 24 * 3600_000
+                  ? "text-amber-500"
+                  : "text-accent-soft";
           return (
             <li
               key={ev.id}
-              className="group flex items-center justify-between gap-3"
+              className="group flex items-center gap-3"
             >
-              <div className="min-w-0">
+              <span
+                className={`w-16 shrink-0 text-sm font-semibold tabular-nums transition-colors ${urgency}`}
+              >
+                {now === 0 ? "·" : formatCountdown(ev.due_at, now)}
+              </span>
+              <div className="min-w-0 flex-1">
                 <p className="truncate leading-tight">{ev.title}</p>
                 <p className="text-xs text-muted">{formatEventTime(ev.due_at)}</p>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <span
-                  className={`rounded-full border px-2.5 py-0.5 text-xs font-medium tabular-nums transition-colors ${
-                    overdue
-                      ? "border-red-500/40 text-red-500"
-                      : "border-accent/40 text-accent-soft"
-                  }`}
-                >
-                  {now === 0 ? "·" : formatCountdown(ev.due_at, now)}
-                </span>
-                <button
-                  aria-label="Delete event"
-                  onClick={() => onDelete(ev.id)}
-                  className="h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted opacity-0 transition-opacity hover:bg-tint-strong hover:text-text group-hover:opacity-100 sm:flex"
-                >
-                  ×
-                </button>
-              </div>
+              <button
+                aria-label="Delete event"
+                onClick={() => onDelete(ev.id)}
+                className="h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted opacity-0 transition-opacity hover:bg-tint-strong hover:text-text group-hover:opacity-100 sm:flex"
+              >
+                ×
+              </button>
             </li>
           );
         })}

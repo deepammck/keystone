@@ -125,6 +125,7 @@ export default async function DashboardPage() {
       wakeMinute={profile?.wake_minute ?? 420}
       sleepMinute={profile?.sleep_minute ?? 1380}
       focusGoalMinutes={profile?.focus_goal_minutes ?? 60}
+      theme={profile?.theme ?? "dark"}
     />
   );
 }
