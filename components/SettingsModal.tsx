@@ -26,6 +26,7 @@ type Props = {
   wakeMinute: number;
   sleepMinute: number;
   focusGoalMinutes: number;
+  initialTheme: string;
   onClose: () => void;
 };
 
@@ -43,6 +44,7 @@ export function SettingsModal({
   wakeMinute,
   sleepMinute,
   focusGoalMinutes,
+  initialTheme,
   onClose,
 }: Props) {
   // Habit rows carry a client id (the real DB id for existing habits, a fresh
@@ -57,19 +59,25 @@ export function SettingsModal({
   const [sleep, setSleep] = useState(minutesToHHMM(sleepMinute));
   const [focusGoal, setFocusGoal] = useState(String(focusGoalMinutes));
   const [saving, setSaving] = useState(false);
-  const [theme, setTheme] = useState<string>(() =>
-    typeof document !== "undefined"
-      ? document.documentElement.dataset.theme ?? "dark"
-      : "dark",
-  );
+  const [theme, setTheme] = useState<string>(initialTheme);
   const supabase = createClient();
 
+  // Apply the theme live (no Save needed) and cache it for instant paint on the
+  // next load.
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     try {
       localStorage.setItem("keystone:theme", theme);
     } catch {}
   }, [theme]);
+
+  // Persist the picked theme to the profile so it's the source of truth and
+  // survives a wiped localStorage cache. Routed through here (not the effect
+  // above) to avoid a redundant write on mount.
+  function selectTheme(next: string) {
+    setTheme(next);
+    supabase.from("profiles").update({ theme: next }).eq("id", userId);
+  }
 
   async function save() {
     setSaving(true);
@@ -131,7 +139,7 @@ export function SettingsModal({
 
   async function signOut() {
     await supabase.auth.signOut();
-    window.location.href = "/";
+    window.location.assign("/");
   }
 
   return (
@@ -195,7 +203,7 @@ export function SettingsModal({
             {THEMES.map((t) => (
               <button
                 key={t}
-                onClick={() => setTheme(t)}
+                onClick={() => selectTheme(t)}
                 className={`text-sm capitalize underline-offset-4 ${
                   theme === t ? "text-text underline" : "text-muted"
                 }`}

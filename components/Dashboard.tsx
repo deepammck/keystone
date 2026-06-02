@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Event, Habit, Task } from "@/lib/types";
 import { useTasks } from "@/lib/hooks/useTasks";
 import { useTimer } from "@/lib/hooks/useTimer";
@@ -41,11 +41,23 @@ type Props = {
   wakeMinute: number;
   sleepMinute: number;
   focusGoalMinutes: number;
+  theme: string;
 };
 
 export function Dashboard(props: Props) {
   const online = useOnline();
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // The profile theme is the source of truth. The inline <head> script paints
+  // from the localStorage cache for an instant, flash-free load; here we
+  // reconcile to the DB value so the theme survives a wiped/evicted cache (the
+  // "reverts to dark on reload" bug) and follows the account across devices.
+  useEffect(() => {
+    document.documentElement.dataset.theme = props.theme;
+    try {
+      localStorage.setItem("keystone:theme", props.theme);
+    } catch {}
+  }, [props.theme]);
 
   const tasks = useTasks(
     props.initialTasks,
@@ -106,6 +118,7 @@ export function Dashboard(props: Props) {
 
         <Header
           timezone={props.timezone}
+          today={props.today}
           completedTasks={tasks.completedCount}
           totalTasks={tasks.totalCount}
           focusSeconds={timer.todaySeconds}
@@ -164,6 +177,8 @@ export function Dashboard(props: Props) {
           <HabitList
             habits={props.habits}
             doneIds={habits.doneIds}
+            userId={props.userId}
+            today={props.today}
             onToggle={habits.toggle}
           />
         </div>
@@ -209,6 +224,7 @@ export function Dashboard(props: Props) {
           wakeMinute={props.wakeMinute}
           sleepMinute={props.sleepMinute}
           focusGoalMinutes={props.focusGoalMinutes}
+          initialTheme={props.theme}
           onClose={() => setSettingsOpen(false)}
         />
       )}

@@ -52,6 +52,7 @@ export type Profile = {
   wake_minute: number;
   sleep_minute: number;
   focus_goal_minutes: number;
+  theme: string;
   created_at: string;
 };
 

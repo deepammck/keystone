@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  formatHeaderDate,
+  formatLongDate,
   formatMinutes,
   formatTime24InTz,
   isSleepTime,
@@ -12,6 +12,7 @@ import { useNow } from "@/lib/hooks/useNow";
 
 type Props = {
   timezone: string;
+  today: string;
   completedTasks: number;
   totalTasks: number;
   focusSeconds: number;
@@ -24,6 +25,7 @@ type Props = {
 
 export function Header({
   timezone,
+  today,
   completedTasks,
   totalTasks,
   focusSeconds,
@@ -35,30 +37,42 @@ export function Header({
 }: Props) {
   const now = useNow(60000);
 
+  // The date is anchored to the canonical `today` (same value the rest of the
+  // app keys off) so it can never drift a day apart from the Notepad; only the
+  // clock time ticks from the live wall clock.
+  const sleeping =
+    now != null &&
+    isSleepTime(minutesIntoDayInTz(timezone, now), wakeMinute, sleepMinute);
+  const pctLeft =
+    now != null
+      ? wakingPercentLeft(
+          minutesIntoDayInTz(timezone, now),
+          wakeMinute,
+          sleepMinute,
+        )
+      : null;
+
   return (
     <header className="flex items-start justify-between">
       <div>
         <h1 className="font-serif text-3xl font-semibold leading-tight sm:text-4xl">
-          {now ? formatHeaderDate(timezone, now) : ""}
-          {now ? ` · ${formatTime24InTz(timezone, now)}` : ""}
+          {formatLongDate(today)}
+          {now != null ? ` · ${formatTime24InTz(timezone, now)}` : ""}
         </h1>
-        <p className="mt-1 text-sm text-muted">
-          {completedTasks}/{totalTasks} tasks · {formatMinutes(focusSeconds)}{" "}
-          focused · {doneHabits}/{totalHabits} habits
-          {now
-            ? isSleepTime(
-                minutesIntoDayInTz(timezone, now),
-                wakeMinute,
-                sleepMinute,
-              )
-              ? " · Go to sleep"
-              : ` · ${wakingPercentLeft(
-                  minutesIntoDayInTz(timezone, now),
-                  wakeMinute,
-                  sleepMinute,
-                )}% of day left`
-            : ""}
-        </p>
+        <div className="mt-2.5 flex flex-wrap items-center gap-2">
+          <Chip icon={<TaskIcon />}>
+            {completedTasks}/{totalTasks} tasks
+          </Chip>
+          <Chip icon={<ClockIcon />}>{formatMinutes(focusSeconds)} focused</Chip>
+          <Chip icon={<HabitIcon />}>
+            {doneHabits}/{totalHabits} habits
+          </Chip>
+          {pctLeft != null && (
+            <Chip icon={<SunIcon />} emphasis>
+              {sleeping ? "Time to sleep" : `${pctLeft}% of day left`}
+            </Chip>
+          )}
+        </div>
       </div>
       <button
         aria-label="Settings"
@@ -71,5 +85,67 @@ export function Header({
         </svg>
       </button>
     </header>
+  );
+}
+
+// Small header metric. The day-left chip is the motivating number, so it gets
+// the filled-accent treatment while the counts stay quiet on tint.
+function Chip({
+  icon,
+  children,
+  emphasis = false,
+}: {
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  emphasis?: boolean;
+}) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium tabular-nums ${
+        emphasis
+          ? "bg-accent text-on-accent"
+          : "bg-tint text-muted [&_svg]:text-accent-soft"
+      }`}
+    >
+      <span className="shrink-0 [&_svg]:block">{icon}</span>
+      {children}
+    </span>
+  );
+}
+
+function TaskIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+      <path d="M5 13l4 4L19 7" />
+    </svg>
+  );
+}
+
+function ClockIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+
+function HabitIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M17 1l4 4-4 4" />
+      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+      <path d="M7 23l-4-4 4-4" />
+      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+    </svg>
+  );
+}
+
+function SunIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" />
+    </svg>
   );
 }
