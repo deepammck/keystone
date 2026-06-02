@@ -45,7 +45,13 @@ export function SettingsModal({
   focusGoalMinutes,
   onClose,
 }: Props) {
-  const [names, setNames] = useState(habits.map((h) => h.name));
+  // Habit rows carry a client id (the real DB id for existing habits, a fresh
+  // uuid for unsaved ones) purely for stable React keys. Whether a row is an
+  // insert vs. an update is decided in save() by checking against the original
+  // habit ids — not by this id.
+  const [habitRows, setHabitRows] = useState(() =>
+    habits.map((h) => ({ id: h.id, name: h.name })),
+  );
   const [tz, setTz] = useState(timezone);
   const [wake, setWake] = useState(minutesToHHMM(wakeMinute));
   const [sleep, setSleep] = useState(minutesToHHMM(sleepMinute));
@@ -68,12 +74,38 @@ export function SettingsModal({
   async function save() {
     setSaving(true);
     const goal = Math.max(0, Math.round(Number(focusGoal) || 0));
+
+    // Reconcile habits against the original set: delete rows the user removed,
+    // update renamed ones, and insert new ones (position = list order).
+    const originalIds = new Set(habits.map((h) => h.id));
+    const keptIds = new Set(habitRows.map((r) => r.id));
+    const habitOps: PromiseLike<unknown>[] = [];
+    for (const h of habits) {
+      if (!keptIds.has(h.id)) {
+        habitOps.push(supabase.from("habits").delete().eq("id", h.id));
+      }
+    }
+    habitRows.forEach((row, i) => {
+      const name = row.name.trim();
+      if (!name) return;
+      if (originalIds.has(row.id)) {
+        const original = habits.find((h) => h.id === row.id);
+        if (original && original.name !== name) {
+          habitOps.push(
+            supabase.from("habits").update({ name }).eq("id", row.id),
+          );
+        }
+      } else {
+        habitOps.push(
+          supabase
+            .from("habits")
+            .insert({ user_id: userId, name, position: i }),
+        );
+      }
+    });
+
     await Promise.all([
-      ...habits.map((h, i) =>
-        names[i].trim() && names[i] !== h.name
-          ? supabase.from("habits").update({ name: names[i].trim() }).eq("id", h.id)
-          : Promise.resolve(),
-      ),
+      ...habitOps,
       tz !== timezone
         ? supabase.from("profiles").update({ timezone: tz }).eq("id", userId)
         : Promise.resolve(),
@@ -116,19 +148,45 @@ export function SettingsModal({
         <div className="mt-5">
           <label className="text-sm text-muted">Habits</label>
           <div className="mt-2 flex flex-col gap-2">
-            {names.map((name, i) => (
-              <input
-                key={habits[i].id}
-                value={name}
-                onChange={(e) =>
-                  setNames((prev) =>
-                    prev.map((n, j) => (j === i ? e.target.value : n)),
-                  )
-                }
-                className="min-h-11 rounded-lg bg-tint px-4 outline-none focus:ring-2 focus:ring-accent"
-              />
+            {habitRows.map((row, i) => (
+              <div key={row.id} className="flex items-center gap-2">
+                <input
+                  value={row.name}
+                  onChange={(e) =>
+                    setHabitRows((prev) =>
+                      prev.map((r, j) =>
+                        j === i ? { ...r, name: e.target.value } : r,
+                      ),
+                    )
+                  }
+                  placeholder="New habit"
+                  className="min-h-11 flex-1 rounded-lg bg-tint px-4 outline-none focus:ring-2 focus:ring-accent"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setHabitRows((prev) => prev.filter((_, j) => j !== i))
+                  }
+                  aria-label="Remove habit"
+                  className="press min-h-11 px-2 text-xl leading-none text-muted hover:text-text"
+                >
+                  ×
+                </button>
+              </div>
             ))}
           </div>
+          <button
+            type="button"
+            onClick={() =>
+              setHabitRows((prev) => [
+                ...prev,
+                { id: crypto.randomUUID(), name: "" },
+              ])
+            }
+            className="mt-2 text-sm text-muted underline-offset-2 hover:underline"
+          >
+            + Add habit
+          </button>
         </div>
 
         <div className="mt-5">

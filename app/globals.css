@@ -60,6 +60,13 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+/* Enlarge everything proportionally on desktop: bumping the root font-size
+   scales all rem-based fonts, padding, and gaps together. Container width is
+   px-based and widened separately in Dashboard.tsx. Mobile/tablet untouched. */
+@media (min-width: 1024px) { html { font-size: 18px; } }  /* +12.5% */
+@media (min-width: 1280px) { html { font-size: 19px; } }  /* +19%   */
+@media (min-width: 1536px) { html { font-size: 20px; } }  /* +25%   */
+
 body {
   background: var(--bg);
   color: var(--text);

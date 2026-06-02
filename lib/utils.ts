@@ -15,6 +15,11 @@ export function todayInTz(timezone: string): string {
   return format(new TZDate(new Date(), timezone), "yyyy-MM-dd");
 }
 
+// ISO date (yyyy-MM-dd) for a given instant in the user's tz.
+export function dateInTz(ms: number, timezone: string): string {
+  return format(new TZDate(ms, timezone), "yyyy-MM-dd");
+}
+
 export function weekStartInTz(timezone: string): string {
   const now = new TZDate(new Date(), timezone);
   return format(startOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd");

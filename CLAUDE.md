@@ -2,6 +2,7 @@
 
 ## 1) Hard Rules
 - One page, six sections (tasks, focus timer, habits, deadlines, daily notepad, past-weeks history) — do not add pages, routes, or nav beyond auth.
+- A compact activity heatmap widget sits at the top of the page (under the header) as part of progress display. It is a widget, NOT a seventh section — do not expand it into one or give it its own page/nav.
 - The Tasks section contains two sub-areas: the Today list and a collapsible "Inbox". Keep them inside the one Tasks `<section>` — don't promote them to top-level sections.
 - Max 5 active *today* tasks; the 6th shows "Finish something first." Inbox is unlimited backlog (`tasks.date = NULL`) and does NOT count toward the limit; `moveToToday` re-checks the limit.
 - Completed today tasks stay inline in their slot, struck through — completion must NOT reorder the list (sorting completed tasks to the bottom caused the "clicking jumps to the lowest task" bug). Order is by `position`/`created_at` only.
@@ -19,6 +20,7 @@
 - Auth/SSR clients: `lib/supabase/`
 - Shared types: `lib/types.ts`
 - Deadlines: `events` table + `useEvents` hook + `EventList`; countdowns via `formatCountdown` (`lib/utils.ts`) ticked by `useNow` (`lib/hooks/useNow.ts`).
+- Heatmap: `components/Heatmap.tsx` — compact 6-week combined-activity grid (tasks + focus + habits). Reuses `WeekHistory`'s client-side fetch pattern and `lib/utils.ts` date helpers (`addWeeks`, `weekDatesFromStart`, `formatWeekRange`); no schema changes, works in both local and Supabase mode.
 
 ## 3) Setup / Test
 - `npm install`
@@ -31,7 +33,7 @@
 - `npm run lint` — ESLint (must pass clean before done)
 
 ## 5) Stop Conditions
-- Refuse changes that add pages, navigation, a seventh section, or cut features listed as intentionally excluded (stats, heatmaps, session logs, calendar, etc.).
+- Refuse changes that add pages, navigation, a seventh section, or cut features listed as intentionally excluded (stats, session logs, calendar, etc.). NOTE: a compact activity heatmap widget IS intentionally included (see Hard Rules §1) — do not treat heatmaps as excluded.
 - Ask before changing the data model, RLS policies, or the migration file.
 - Ask before adding any dependency.
 - Stop and report if a feature needs live Supabase to verify and credentials are absent.
