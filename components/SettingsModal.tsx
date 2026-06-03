@@ -74,9 +74,12 @@ export function SettingsModal({
   // Persist the picked theme to the profile so it's the source of truth and
   // survives a wiped localStorage cache. Routed through here (not the effect
   // above) to avoid a redundant write on mount.
-  function selectTheme(next: string) {
+  async function selectTheme(next: string) {
     setTheme(next);
-    supabase.from("profiles").update({ theme: next }).eq("id", userId);
+    // Must await — Supabase (and the local-client) query builders are lazy and
+    // only fire when the promise is consumed. A dangling call never writes, so
+    // the theme would revert to the stale DB value on reload.
+    await supabase.from("profiles").update({ theme: next }).eq("id", userId);
   }
 
   async function save() {
