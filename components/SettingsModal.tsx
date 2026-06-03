@@ -75,11 +75,21 @@ export function SettingsModal({
   // survives a wiped localStorage cache. Routed through here (not the effect
   // above) to avoid a redundant write on mount.
   async function selectTheme(next: string) {
-    setTheme(next);
-    // Must await — Supabase (and the local-client) query builders are lazy and
-    // only fire when the promise is consumed. A dangling call never writes, so
-    // the theme would revert to the stale DB value on reload.
-    await supabase.from("profiles").update({ theme: next }).eq("id", userId);
+    const prev = theme;
+    setTheme(next); // live preview via the effect above
+    // Must await: Supabase/local-client query builders are lazy and only fire
+    // when the promise is consumed — a dangling call never writes, so the theme
+    // would revert to the stale DB value on the post-save reload. upsert (not
+    // update) also creates the profile row if it's somehow missing, killing the
+    // silent 0-row no-op case.
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({ id: userId, theme: next });
+    if (error) {
+      // Don't leave the UI showing a theme that didn't actually persist.
+      setTheme(prev);
+      console.error("Failed to save theme", error);
+    }
   }
 
   async function save() {
