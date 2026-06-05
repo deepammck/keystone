@@ -78,6 +78,10 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* Always reserve the vertical scrollbar gutter so switching between tools
+     (some tall enough to scroll, some not) doesn't change the content width
+     and shift the centered layout — including the app switcher — sideways. */
+  scrollbar-gutter: stable;
 }
 
 /* A gentle root font-size bump on large screens only — kept small so the whole
@@ -164,15 +168,6 @@ body::after {
   box-shadow:
     0 2px 4px color-mix(in oklab, var(--shadow) 12%, transparent),
     0 18px 40px -22px var(--shadow);
-}
-
-/* Faint dot-grid so the notepad reads as a page rather than an inert slab.
-   Uses the theme border tint, so it stays subtle in every theme. The pattern
-   scrolls with the text (local background) like real paper. */
-.notepad-paper {
-  background-image: radial-gradient(var(--border) 1px, transparent 1px);
-  background-size: 18px 18px;
-  background-position: 0 7px;
 }
 
 /* Section heading with a short gold rule underneath as an editorial marker. */

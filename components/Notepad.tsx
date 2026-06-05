@@ -143,7 +143,7 @@ export function Notepad({ userId, today, initialNote }: Props) {
         value={content}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Notes for the day…"
-        className="notepad-paper mt-3 min-h-28 flex-1 resize-none rounded-lg bg-bg px-4 py-3 text-sm leading-7 outline-none placeholder:text-muted focus:ring-2 focus:ring-accent lg:min-h-40"
+        className="mt-3 min-h-28 flex-1 resize-none rounded-lg bg-bg px-4 py-3 text-sm leading-7 outline-none placeholder:text-muted focus:ring-2 focus:ring-accent lg:min-h-40"
       />
     </section>
   );
