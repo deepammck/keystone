@@ -183,7 +183,7 @@ export function AcademicsModule({
           <div className="mb-2 text-sm font-semibold">Grade {lvl}</div>
           {/* Transcript-style columns with a header so rows scan cleanly. */}
           <div className="grid grid-cols-[1fr_auto_auto] items-center gap-x-3 gap-y-1.5 text-sm">
-            <div className="grid grid-cols-subgrid text-[10px] uppercase tracking-wide text-muted [grid-column:1/-1]">
+            <div className="grid grid-cols-subgrid text-2xs uppercase tracking-wide text-muted [grid-column:1/-1]">
               <span>Course</span>
               <span className="text-center">Grade</span>
               <span className="text-right">Rigor / term</span>

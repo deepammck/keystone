@@ -715,7 +715,7 @@ function DraftCard({
                   <span className="flex items-center gap-2">
                     <span className="font-medium tabular-nums">v{v.version}</span>
                     {v.id === draft.id && (
-                      <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-medium text-on-accent">
+                      <span className="rounded-full bg-accent px-1.5 py-0.5 text-2xs font-medium text-on-accent">
                         current
                       </span>
                     )}

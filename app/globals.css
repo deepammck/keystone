@@ -68,6 +68,7 @@
   --color-border: var(--border);
   --color-danger: #ef4444; /* = Tailwind red-500 */
   --color-warning: #f59e0b; /* = Tailwind amber-500 */
+  --text-2xs: 10px;
   --font-serif: var(--font-playfair);
   --font-sans: var(--font-dm-sans);
   --font-mono: ui-monospace, "SF Mono", "Menlo", monospace;
