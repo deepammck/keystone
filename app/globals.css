@@ -34,6 +34,8 @@
   --bg: #0a0a0a;
   --text: #ffffff;
   --accent: var(--text);
+  --accent-soft: #cccccc;
+  --on-accent: var(--bg);
   --muted: #9a9a9a;
   --tint: #141414;
   --tint-strong: #1f1f1f;
