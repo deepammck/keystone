@@ -191,7 +191,7 @@ export function DeleteButton({
         <button
           type="button"
           onClick={onClick}
-          className="press rounded-md bg-red-500/15 px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-500/25"
+          className="press rounded-md bg-danger/15 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/25"
         >
           Delete?
         </button>
@@ -259,7 +259,7 @@ export function CharCounter({
     ratio > 1
       ? "text-accent font-medium"
       : ratio >= 0.85
-        ? "text-amber-500"
+        ? "text-warning"
         : "text-muted";
   return (
     <span className={`text-xs tabular-nums ${tone}`}>
