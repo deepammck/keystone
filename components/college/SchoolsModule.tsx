@@ -117,7 +117,7 @@ export function SchoolsModule({
           ))}
         </div>
         {imbalance && (
-          <p className="rounded-lg bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-500">
+          <p className="rounded-lg bg-warning/10 px-3 py-1.5 text-xs font-medium text-warning">
             {imbalance}
           </p>
         )}
