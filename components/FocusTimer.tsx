@@ -10,6 +10,7 @@ type Props = {
   effectiveStart: number | null;
   frozenElapsed: number;
   todaySeconds: number;
+  goalMinutes: number;
   onStart: () => void;
   onPause: () => void;
   onResume: () => void;
@@ -23,6 +24,7 @@ export function FocusTimer({
   effectiveStart,
   frozenElapsed,
   todaySeconds,
+  goalMinutes,
   onStart,
   onPause,
   onResume,
@@ -59,6 +61,35 @@ export function FocusTimer({
     setLabeling(false);
   }
 
+  // Today's progress toward the daily focus goal, shown as a slim bar so the
+  // hero action carries a sense of "how far am I". Falls back to a plain total
+  // when no goal is set.
+  const goalSeconds = goalMinutes * 60;
+  const goalPct =
+    goalSeconds > 0 ? Math.min(100, (todaySeconds / goalSeconds) * 100) : 0;
+  const goalReached = goalSeconds > 0 && todaySeconds >= goalSeconds;
+  const progress =
+    goalSeconds > 0 ? (
+      <div className="mt-1 w-full max-w-xs">
+        <div className="flex items-center justify-between text-xs text-muted">
+          <span className="tabular-nums">
+            {formatMinutes(todaySeconds)} of {goalMinutes}m
+          </span>
+          {goalReached && (
+            <span className="font-medium text-accent-soft">Goal met ✓</span>
+          )}
+        </div>
+        <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-bg">
+          <div
+            className="h-full rounded-full bg-accent transition-[width] duration-500"
+            style={{ width: `${goalPct}%` }}
+          />
+        </div>
+      </div>
+    ) : (
+      <p className="text-xs text-muted">{formatMinutes(todaySeconds)} today</p>
+    );
+
   // At rest the card collapses around a hero "Start" button — no dominant empty
   // 00:00. The tall, breathing treatment is reserved for an actual session.
   if (phase === "idle") {
@@ -78,7 +109,7 @@ export function FocusTimer({
           </svg>
           Start
         </button>
-        <p className="text-xs text-muted">{formatMinutes(todaySeconds)} today</p>
+        {progress}
       </section>
     );
   }
@@ -139,9 +170,7 @@ export function FocusTimer({
         </div>
       )}
 
-      <p className="mt-6 text-sm text-muted">
-        {formatMinutes(todaySeconds)} today
-      </p>
+      <div className="mt-6 flex justify-center">{progress}</div>
     </section>
   );
 }

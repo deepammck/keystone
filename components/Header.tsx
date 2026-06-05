@@ -55,11 +55,13 @@ export function Header({
   return (
     <header className="flex items-start justify-between">
       <div>
-        <h1 className="font-serif text-3xl font-semibold leading-tight sm:text-4xl">
+        {/* The date is orienting context, not the hero — kept to a quiet overline
+            so the eye lands on the progress chips (and the work below) first. */}
+        <h1 className="font-serif text-[15px] font-medium tracking-wide text-muted">
           {formatLongDate(today)}
           {now != null ? ` · ${formatTime24InTz(timezone, now)}` : ""}
         </h1>
-        <div className="mt-2.5 flex flex-wrap items-center gap-2">
+        <div className="mt-2 flex flex-wrap items-center gap-2">
           <Chip icon={<TaskIcon />}>
             {completedTasks}/{totalTasks} tasks
           </Chip>

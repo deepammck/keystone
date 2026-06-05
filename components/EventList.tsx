@@ -64,7 +64,7 @@ export function EventList({ events, onAdd, onDelete, timezone }: Props) {
               className="group flex items-center gap-3"
             >
               <span
-                className={`w-16 shrink-0 text-sm font-semibold tabular-nums transition-colors ${urgency}`}
+                className={`w-16 shrink-0 font-mono text-sm font-semibold tabular-nums transition-colors ${urgency}`}
               >
                 {now === 0 ? "·" : formatCountdown(ev.due_at, now)}
               </span>

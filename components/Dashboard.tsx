@@ -8,6 +8,7 @@ import { useHabits } from "@/lib/hooks/useHabits";
 import { useEvents } from "@/lib/hooks/useEvents";
 import { useRollover } from "@/lib/hooks/useRollover";
 import { useOnline } from "@/lib/hooks/useOnline";
+import { AppSwitcher } from "@/components/AppSwitcher";
 import { Header } from "@/components/Header";
 import { FocusTimer } from "@/components/FocusTimer";
 import { TaskList } from "@/components/TaskList";
@@ -114,6 +115,7 @@ export function Dashboard(props: Props) {
   return (
     <main className="relative z-10 mx-auto flex max-w-[1080px] flex-col gap-5 px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-6 lg:grid lg:max-w-[1240px] lg:grid-cols-2 lg:items-start xl:max-w-[1400px]">
       <div className="reveal lg:col-span-2">
+        <AppSwitcher userId={props.userId} />
         <OfflineIndicator online={online} />
 
         <Header
@@ -137,6 +139,7 @@ export function Dashboard(props: Props) {
             effectiveStart={timer.effectiveStart}
             frozenElapsed={timer.frozenElapsed}
             todaySeconds={timer.todaySeconds}
+            goalMinutes={props.focusGoalMinutes}
             onStart={timer.start}
             onPause={timer.pause}
             onResume={timer.resume}

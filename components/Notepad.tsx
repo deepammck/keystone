@@ -17,12 +17,18 @@ export function Notepad({ userId, today, initialNote }: Props) {
   // Preview of the day-before's note, surfaced only while the current page is
   // blank so returning users get continuity instead of a void.
   const [prevNote, setPrevNote] = useState("");
+  // System-status cue so the user trusts the autosave instead of guessing.
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">(
+    "idle",
+  );
   const [supabase] = useState(() => createClient());
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
+      if (savedTimer.current) clearTimeout(savedTimer.current);
     };
   }, []);
 
@@ -59,8 +65,10 @@ export function Notepad({ userId, today, initialNote }: Props) {
 
   function onChange(value: string) {
     setContent(value);
+    setSaveState("saving");
     const targetDate = date;
     if (saveTimer.current) clearTimeout(saveTimer.current);
+    if (savedTimer.current) clearTimeout(savedTimer.current);
     saveTimer.current = setTimeout(() => {
       runOrQueue(supabase, {
         table: "daily_notes",
@@ -73,6 +81,8 @@ export function Notepad({ userId, today, initialNote }: Props) {
         },
         onConflict: "user_id,date",
       });
+      setSaveState("saved");
+      savedTimer.current = setTimeout(() => setSaveState("idle"), 2000);
     }, 800);
   }
 
@@ -90,6 +100,14 @@ export function Notepad({ userId, today, initialNote }: Props) {
         </button>
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium">{formatDayLabel(date)}</span>
+          <span
+            className={`text-xs text-muted transition-opacity duration-300 ${
+              saveState === "idle" ? "opacity-0" : "opacity-100"
+            }`}
+            aria-live="polite"
+          >
+            {saveState === "saving" ? "Saving…" : saveState === "saved" ? "Saved" : ""}
+          </span>
           {!isToday && (
             <button
               onClick={() => goTo(today)}

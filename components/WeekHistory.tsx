@@ -209,12 +209,16 @@ export function WeekHistory({
     <section>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="press flex min-h-11 items-center gap-1 text-sm text-muted transition-colors hover:text-text"
+        aria-expanded={open}
+        className="press flex min-h-11 w-full items-center gap-1.5 py-2 text-sm font-medium text-muted transition-colors hover:text-text"
       >
-        Past weeks{" "}
-        <span className={`transition-transform duration-300 ${open ? "rotate-90" : ""}`}>
+        <span
+          className={`text-xs transition-transform duration-300 ${open ? "rotate-90" : ""}`}
+          aria-hidden
+        >
           ▸
         </span>
+        {open ? "Hide past weeks" : "View past weeks"}
       </button>
 
       <div

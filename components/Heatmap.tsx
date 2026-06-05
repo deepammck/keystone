@@ -21,7 +21,7 @@ const FOCUS_CAP_H = 2; // hours of focus that max out the focus signal
 // Tailwind needs whole class strings (no runtime concatenation), so map each
 // intensity level to a static class. 0 = empty, 4 = fullest.
 const LEVEL_CLASS = [
-  "bg-tint-strong border border-border",
+  "bg-tint-strong border border-border/50",
   "bg-accent/30",
   "bg-accent/55",
   "bg-accent/80",
@@ -199,7 +199,7 @@ export function Heatmap({
 
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-10">
           <div className={loading ? "opacity-40 transition-opacity" : "transition-opacity"}>
-            <div className="grid w-max grid-cols-7 gap-1.5">
+            <div className="grid w-max grid-cols-7 gap-2">
               {DAY_LABELS.map((label, i) => (
                 <span key={i} className="w-4 text-center text-[10px] text-muted">
                   {label}
@@ -222,13 +222,23 @@ export function Heatmap({
                       }
                       className={`h-4 w-4 rounded transition-all ${
                         future
-                          ? "border border-border bg-tint-strong opacity-40"
+                          ? "border border-border/50 bg-tint-strong opacity-40"
                           : LEVEL_CLASS[lvl]
                       }`}
                     />
                   );
                 }),
               )}
+            </div>
+
+            {/* Intensity legend so the colour ramp reads as a scale, like the
+                GitHub contribution graph. */}
+            <div className="mt-3 flex items-center gap-1 text-[10px] text-muted">
+              <span>Less</span>
+              {LEVEL_CLASS.map((cls, i) => (
+                <span key={i} className={`h-3 w-3 rounded ${cls}`} aria-hidden />
+              ))}
+              <span>More</span>
             </div>
           </div>
 
