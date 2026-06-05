@@ -52,11 +52,11 @@ export function EventList({ events, onAdd, onDelete, timezone }: Props) {
             now > 0 ? new Date(ev.due_at).getTime() - now : Infinity;
           const urgency =
             diffMs <= 0
-              ? "text-red-500"
+              ? "text-danger"
               : diffMs < 24 * 3600_000
-                ? "text-red-500"
+                ? "text-danger"
                 : diffMs < 7 * 24 * 3600_000
-                  ? "text-amber-500"
+                  ? "text-warning"
                   : "text-accent-soft";
           return (
             <li

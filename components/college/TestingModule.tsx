@@ -279,7 +279,7 @@ export function TestingModule({
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${
                           days <= 14
-                            ? "bg-amber-500/15 text-amber-500"
+                            ? "bg-warning/15 text-warning"
                             : "bg-bg text-accent-soft"
                         }`}
                       >

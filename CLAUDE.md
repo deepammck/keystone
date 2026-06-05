@@ -29,6 +29,7 @@
 - College tool: 9 tables (`college_activities`, `college_schools`, `essay_prompts`, `essay_stories`, `essay_drafts`, `college_courses`, `college_tests`, `college_honors`, `college_recommenders`); generic `useCollection` hook (`lib/hooks/useCollection.ts`); reference data + GPA/word-count/limits in `lib/college-reference.ts`; `components/CollegeTool.tsx` + `components/college/*`. Route `app/college/page.tsx` (SSR `Promise.all` in Supabase mode, `components/LocalCollege.tsx` in local mode). Common App prompts/categories are code constants (verify per cycle), not DB rows; story↔prompt links are `text[]`; draft version history via shared `group_id`.
 - Deadlines: `events` table + `useEvents` hook + `EventList`; countdowns via `formatCountdown` (`lib/utils.ts`) ticked by `useNow` (`lib/hooks/useNow.ts`).
 - Heatmap: `components/Heatmap.tsx` — compact 6-week combined-activity grid (tasks + focus + habits). Reuses `WeekHistory`'s client-side fetch pattern and `lib/utils.ts` date helpers (`addWeeks`, `weekDatesFromStart`, `formatWeekRange`); no schema changes, works in both local and Supabase mode.
+- Local/server sort parity (invariant): `lib/local-client.ts` re-implements the sort order each hook applies (`useLinks` newest-first, `useCollection`/college oldest-first, `useEvents` by due date). When you change a sort in a hook, update the matching loader in `local-client.ts` (`loadLocalLinks`/`loadLocalCollege`/`loadLocalInitial`) or local and Supabase mode will diverge.
 
 ## 3) Setup / Test
 - `npm install`

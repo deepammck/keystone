@@ -199,15 +199,3 @@ export const RECOMMENDER_STATUSES = [
   "agreed",
   "submitted",
 ] as const;
-
-// ---------------------------------------------------------------------------
-// Loose junior-year timeline reference for the Overview (no countdown panic).
-// ---------------------------------------------------------------------------
-export const JUNIOR_TIMELINE: { when: string; what: string }[] = [
-  { when: "Fall junior year", what: "Build rigor; start logging activities & banking stories." },
-  { when: "Winter junior year", what: "Plan SAT/ACT; first official sitting in spring." },
-  { when: "Spring junior year", what: "Take SAT/ACT; AP exams; ask teachers about rec letters." },
-  { when: "Summer before senior year", what: "Research schools, visit, start drafting the personal statement." },
-  { when: "Aug 1 (senior year)", what: "Common App opens — transfer your shortlist & drafts in." },
-  { when: "Fall senior year", what: "Finalize essays, finish supplements, submit (EA/ED first)." },
-];

@@ -201,7 +201,7 @@ export function Heatmap({
           <div className={loading ? "opacity-40 transition-opacity" : "transition-opacity"}>
             <div className="grid w-max grid-cols-7 gap-2">
               {DAY_LABELS.map((label, i) => (
-                <span key={i} className="w-4 text-center text-[10px] text-muted">
+                <span key={i} className="w-4 text-center text-2xs text-muted">
                   {label}
                 </span>
               ))}
@@ -233,7 +233,7 @@ export function Heatmap({
 
             {/* Intensity legend so the colour ramp reads as a scale, like the
                 GitHub contribution graph. */}
-            <div className="mt-3 flex items-center gap-1 text-[10px] text-muted">
+            <div className="mt-3 flex items-center gap-1 text-2xs text-muted">
               <span>Less</span>
               {LEVEL_CLASS.map((cls, i) => (
                 <span key={i} className={`h-3 w-3 rounded ${cls}`} aria-hidden />

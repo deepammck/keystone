@@ -138,7 +138,7 @@ export function HonorsModule({
                         aria-label="Move up"
                         disabled={!prevSameLevel}
                         onClick={() => move(i, -1)}
-                        className="press text-[10px] leading-none text-muted hover:text-text disabled:opacity-20"
+                        className="press text-2xs leading-none text-muted hover:text-text disabled:opacity-20"
                       >
                         ▲
                       </button>
@@ -147,7 +147,7 @@ export function HonorsModule({
                         aria-label="Move down"
                         disabled={!nextSameLevel}
                         onClick={() => move(i, 1)}
-                        className="press text-[10px] leading-none text-muted hover:text-text disabled:opacity-20"
+                        className="press text-2xs leading-none text-muted hover:text-text disabled:opacity-20"
                       >
                         ▼
                       </button>

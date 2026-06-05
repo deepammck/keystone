@@ -105,7 +105,7 @@ export function LinkItem({ link, onDelete, onTagClick }: Props) {
           <button
             type="button"
             onClick={() => onDelete(link.id)}
-            className="press rounded-md bg-red-500/15 px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-500/25"
+            className="press rounded-md bg-danger/15 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/25"
           >
             Delete?
           </button>
