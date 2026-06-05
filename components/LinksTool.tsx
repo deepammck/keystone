@@ -35,9 +35,10 @@ export function LinksTool({ userId, initialLinks }: Props) {
   }, [links, query]);
 
   return (
-    <main className="relative z-10 mx-auto flex max-w-[640px] flex-col gap-4 px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-6">
+    <>
+      <AppSwitcher userId={userId} />
+      <main className="relative z-10 mx-auto flex max-w-[640px] flex-col gap-4 px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-6">
       <div className="reveal">
-        <AppSwitcher userId={userId} />
         <OfflineIndicator online={online} />
         <h1 className="font-serif text-3xl font-semibold leading-tight sm:text-4xl">
           Link Dump
@@ -65,5 +66,6 @@ export function LinksTool({ userId, initialLinks }: Props) {
         />
       </div>
     </main>
+    </>
   );
 }
