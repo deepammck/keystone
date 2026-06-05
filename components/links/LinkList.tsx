@@ -7,6 +7,10 @@ type Props = {
   links: Link[];
   totalCount: number;
   query: string;
+  onEdit: (
+    id: string,
+    input: { url: string; note: string; tags: string[] },
+  ) => void;
   onDelete: (id: string) => void;
   onTagClick: (tag: string) => void;
 };
@@ -15,6 +19,7 @@ export function LinkList({
   links,
   totalCount,
   query,
+  onEdit,
   onDelete,
   onTagClick,
 }: Props) {
@@ -38,6 +43,7 @@ export function LinkList({
         <LinkItem
           key={link.id}
           link={link}
+          onEdit={onEdit}
           onDelete={onDelete}
           onTagClick={onTagClick}
         />

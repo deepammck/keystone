@@ -27,13 +27,18 @@ function relativeTime(iso: string): string {
 
 type Props = {
   link: Link;
+  onEdit: (
+    id: string,
+    input: { url: string; note: string; tags: string[] },
+  ) => void;
   onDelete: (id: string) => void;
   onTagClick: (tag: string) => void;
 };
 
-export function LinkItem({ link, onDelete, onTagClick }: Props) {
+export function LinkItem({ link, onEdit, onDelete, onTagClick }: Props) {
   const host = hostname(link.url);
   const [armed, setArmed] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   // Arm-then-confirm so a stray click can't hard-delete a saved link; the armed
   // state disarms itself shortly after.
@@ -42,6 +47,19 @@ export function LinkItem({ link, onDelete, onTagClick }: Props) {
     const t = setTimeout(() => setArmed(false), 3500);
     return () => clearTimeout(t);
   }, [armed]);
+
+  if (editing) {
+    return (
+      <LinkEditForm
+        link={link}
+        onSave={(input) => {
+          onEdit(link.id, input);
+          setEditing(false);
+        }}
+        onCancel={() => setEditing(false)}
+      />
+    );
+  }
 
   return (
     <li className="card group relative rounded-2xl bg-tint p-4 pr-11">
@@ -99,7 +117,7 @@ export function LinkItem({ link, onDelete, onTagClick }: Props) {
         </ul>
       )}
 
-      {/* Delete is hidden until hover and asks once before removing. */}
+      {/* Edit + delete are hidden until hover; delete asks once before removing. */}
       {armed ? (
         <div className="absolute right-2 top-2 flex items-center gap-1">
           <button
@@ -119,16 +137,120 @@ export function LinkItem({ link, onDelete, onTagClick }: Props) {
           </button>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={() => setArmed(true)}
-          aria-label="Delete link"
-          title="Delete"
-          className="press absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-md text-muted opacity-0 transition-opacity hover:bg-bg hover:text-text focus-visible:opacity-100 group-hover:opacity-100"
-        >
-          ✕
-        </button>
+        <div className="absolute right-2 top-2 flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            aria-label="Edit link"
+            title="Edit"
+            className="press grid h-9 w-9 place-items-center rounded-md text-muted opacity-0 transition-opacity hover:bg-bg hover:text-text focus-visible:opacity-100 group-hover:opacity-100"
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => setArmed(true)}
+            aria-label="Delete link"
+            title="Delete"
+            className="press grid h-9 w-9 place-items-center rounded-md text-muted opacity-0 transition-opacity hover:bg-bg hover:text-text focus-visible:opacity-100 group-hover:opacity-100"
+          >
+            ✕
+          </button>
+        </div>
       )}
+    </li>
+  );
+}
+
+// Inline editor — mirrors AddLinkForm's fields/styling but pre-filled and
+// scoped to one card. Title/summary aren't shown: they're derived from the URL
+// (re-fetched on save when the URL changes), not user-authored.
+function LinkEditForm({
+  link,
+  onSave,
+  onCancel,
+}: {
+  link: Link;
+  onSave: (input: { url: string; note: string; tags: string[] }) => void;
+  onCancel: () => void;
+}) {
+  const [url, setUrl] = useState(link.url);
+  const [note, setNote] = useState(link.note);
+  const [tags, setTags] = useState((link.tags ?? []).join(", "));
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmedUrl = url.trim();
+    const trimmedNote = note.trim();
+    if (!trimmedUrl || !trimmedNote) return;
+    onSave({
+      url: trimmedUrl,
+      note: trimmedNote,
+      tags: tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean),
+    });
+  }
+
+  return (
+    <li className="card rounded-2xl bg-tint p-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
+        <input
+          type="url"
+          inputMode="url"
+          autoFocus
+          placeholder="https://…"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          aria-label="URL"
+          className="min-h-11 w-full rounded-lg bg-bg px-4 text-base font-medium outline-none focus:ring-2 focus:ring-accent"
+        />
+        <textarea
+          rows={3}
+          placeholder="What made this worth keeping?"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          aria-label="Note"
+          className="w-full resize-y rounded-lg bg-bg px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent"
+        />
+        <input
+          type="text"
+          placeholder="tags, comma, separated (optional)"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
+          aria-label="Tags"
+          className="min-h-11 w-full rounded-lg bg-bg px-4 text-sm outline-none focus:ring-2 focus:ring-accent"
+        />
+        <div className="flex items-center gap-2">
+          <button
+            type="submit"
+            className="press btn-accent min-h-11 self-start rounded-lg bg-text px-5 font-medium text-bg"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="press min-h-11 self-start rounded-lg px-4 text-sm font-medium text-muted hover:text-text"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
     </li>
   );
 }

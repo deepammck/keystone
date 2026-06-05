@@ -29,8 +29,21 @@ export function SearchBar({ value, onChange }: Props) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-label="Search saved links"
-        className="min-h-11 w-full rounded-lg bg-tint pl-10 pr-4 outline-none focus:ring-2 focus:ring-accent"
+        className="min-h-11 w-full rounded-lg bg-tint pl-10 pr-11 outline-none focus:ring-2 focus:ring-accent"
       />
+      {/* An explicit exit from a search/tag filter — without it, clicking a tag
+          can leave you stuck in a filtered view with no obvious way back. */}
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange("")}
+          aria-label="Clear filter"
+          title="Clear filter"
+          className="press absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-md text-muted hover:bg-bg hover:text-text"
+        >
+          ✕
+        </button>
+      )}
     </div>
   );
 }

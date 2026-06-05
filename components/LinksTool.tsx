@@ -17,7 +17,10 @@ type Props = {
 
 export function LinksTool({ userId, initialLinks }: Props) {
   const online = useOnline();
-  const { links, addLink, deleteLink } = useLinks(initialLinks, userId);
+  const { links, addLink, updateLink, deleteLink } = useLinks(
+    initialLinks,
+    userId,
+  );
   const [query, setQuery] = useState("");
 
   // Client-side, case-insensitive substring match over the user's own note +
@@ -49,8 +52,10 @@ export function LinksTool({ userId, initialLinks }: Props) {
         <AddLinkForm onAdd={addLink} />
       </div>
 
-      {/* Search only earns its place once the list is long enough to need it. */}
-      {links.length >= 5 && (
+      {/* Search only earns its place once the list is long enough to need it —
+          but also whenever a filter is active (e.g. you clicked a tag), so the
+          clear button is always reachable and you're never stuck filtered. */}
+      {(links.length >= 5 || query.trim()) && (
         <div className="reveal" style={{ animationDelay: "0.12s" }}>
           <SearchBar value={query} onChange={setQuery} />
         </div>
@@ -61,6 +66,7 @@ export function LinksTool({ userId, initialLinks }: Props) {
           links={filtered}
           totalCount={links.length}
           query={query}
+          onEdit={updateLink}
           onDelete={deleteLink}
           onTagClick={setQuery}
         />
