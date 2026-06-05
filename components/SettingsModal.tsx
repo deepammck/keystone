@@ -164,7 +164,21 @@ export function SettingsModal({
         className="w-full max-w-sm rounded-2xl bg-bg p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="font-serif text-2xl font-semibold">Settings</h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-serif text-2xl font-semibold">Settings</h2>
+          {/* X saves and closes: there's no separate Save button anymore, so the
+              close action must persist habits/timezone/waking-hours/focus-goal
+              (theme already auto-saves live). */}
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving}
+            aria-label="Close settings"
+            className="press -mr-1 min-h-11 px-2 text-2xl leading-none text-muted hover:text-text disabled:opacity-50"
+          >
+            ×
+          </button>
+        </div>
 
         <div className="mt-5">
           <label className="text-sm text-muted">Habits</label>
@@ -282,21 +296,6 @@ export function SettingsModal({
           >
             Sign out
           </button>
-          <div className="flex gap-2">
-            <button
-              onClick={onClose}
-              className="min-h-11 rounded-lg px-4 text-muted"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={save}
-              disabled={saving}
-              className="min-h-11 rounded-lg bg-text px-5 font-medium text-bg disabled:opacity-50"
-            >
-              {saving ? "Saving…" : "Save"}
-            </button>
-          </div>
         </div>
       </div>
     </div>

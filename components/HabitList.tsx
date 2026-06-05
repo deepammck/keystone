@@ -117,7 +117,7 @@ function HabitItem({
         className="group flex min-h-11 w-full items-center gap-3 py-1 text-left"
       >
         <span
-          className={`press flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition-all duration-150 group-hover:border-accent ${
+          className={`press flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-2 transition-all duration-150 group-hover:border-accent ${
             done
               ? "scale-105 border-accent bg-accent text-on-accent"
               : "border-muted/50 bg-transparent"

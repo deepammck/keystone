@@ -34,6 +34,8 @@
   --bg: #0a0a0a;
   --text: #ffffff;
   --accent: var(--text);
+  --accent-soft: #cccccc;
+  --on-accent: var(--bg);
   --muted: #9a9a9a;
   --tint: #141414;
   --tint-strong: #1f1f1f;
@@ -66,6 +68,9 @@
   --color-tint: var(--tint);
   --color-tint-strong: var(--tint-strong);
   --color-border: var(--border);
+  --color-danger: #ef4444; /* = Tailwind red-500 */
+  --color-warning: #f59e0b; /* = Tailwind amber-500 */
+  --text-2xs: 10px;
   --font-serif: var(--font-playfair);
   --font-sans: var(--font-dm-sans);
   --font-mono: ui-monospace, "SF Mono", "Menlo", monospace;

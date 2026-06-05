@@ -42,10 +42,25 @@ export function TaskList({
   }
 
   const empty = tasks.length === 0;
+  // The cap is on *active* today tasks (max 5); completed ones stay inline but
+  // don't count. Surfacing "x of 5" makes the constraint visible before the
+  // 6th-task message appears.
+  const activeCount = tasks.filter((t) => !t.completed).length;
 
   return (
     <section className="flex flex-col gap-1">
-      <h2 className="section-title mb-2 font-serif text-xl font-semibold">Today</h2>
+      <div className="mb-2 flex items-baseline justify-between">
+        <h2 className="section-title font-serif text-xl font-semibold">Today</h2>
+        {!empty && (
+          <span
+            className={`text-xs font-medium tabular-nums ${
+              activeCount >= 5 ? "text-accent-soft" : "text-muted"
+            }`}
+          >
+            {activeCount} of 5
+          </span>
+        )}
+      </div>
 
       {empty && (
         <p className="py-2 font-serif text-base text-text/80">
@@ -82,8 +97,9 @@ export function TaskList({
         <p className="mt-1 text-sm text-accent-soft">{limitMessage}</p>
       )}
 
-      {/* Inbox / upcoming backlog */}
-      <div className="mt-3 border-t border-tint-strong pt-2">
+      {/* Inbox / upcoming backlog — a clearer rule sets the unlimited backlog
+          apart from the capped Today list above. */}
+      <div className="mt-3 border-t border-border pt-3">
         <button
           onClick={() => setShowInbox((v) => !v)}
           className="flex w-full items-center justify-between py-1 text-sm text-muted transition-colors hover:text-text"

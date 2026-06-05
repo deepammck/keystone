@@ -14,7 +14,17 @@ type Tables =
   | "habits"
   | "habit_logs"
   | "daily_notes"
-  | "events";
+  | "events"
+  | "links"
+  | "college_activities"
+  | "college_schools"
+  | "essay_prompts"
+  | "essay_stories"
+  | "essay_drafts"
+  | "college_courses"
+  | "college_tests"
+  | "college_honors"
+  | "college_recommenders";
 
 type DB = Record<Tables, Row[]>;
 
@@ -28,6 +38,16 @@ const EMPTY: DB = {
   habit_logs: [],
   daily_notes: [],
   events: [],
+  links: [],
+  college_activities: [],
+  college_schools: [],
+  essay_prompts: [],
+  essay_stories: [],
+  essay_drafts: [],
+  college_courses: [],
+  college_tests: [],
+  college_honors: [],
+  college_recommenders: [],
 };
 
 function read(): DB {
@@ -60,6 +80,7 @@ export function seedLocal(timezone: string) {
       sleep_minute: 1380,
       focus_goal_minutes: 60,
       theme: "dark",
+      last_app: "keystone",
       created_at: new Date().toISOString(),
     });
   }
@@ -180,8 +201,15 @@ class Query {
       const items = Array.isArray(this.payload) ? this.payload : [this.payload!];
       const inserted: Row[] = [];
       for (const item of items) {
-        if (this.op === "upsert" && this.conflict) {
-          const keys = this.conflict.split(",").map((k) => k.trim());
+        if (this.op === "upsert") {
+          // Default the conflict target to the primary key `id` when no
+          // onConflict is given — mirrors Postgres/Supabase, whose upsert
+          // targets the PK by default. Without this, profiles upserts that
+          // omit onConflict (e.g. {id, theme} from settings, {id, last_app}
+          // from the app switcher) appended a NEW row each time instead of
+          // merging, so getProfile()'s profiles[0] kept the stale default
+          // theme — the "theme resets when navigating to Keystone" bug.
+          const keys = (this.conflict ?? "id").split(",").map((k) => k.trim());
           const idx = rows.findIndex((r) => keys.every((k) => r[k] === item[k]));
           if (idx >= 0) {
             rows[idx] = { ...rows[idx], ...item };
@@ -273,6 +301,49 @@ export function createLocalClient(): any {
         return { error: null };
       },
     },
+  };
+}
+
+// Initial links for the Links tool in local mode — the localStorage analogue of
+// the server fetch in app/links/page.tsx. Newest-first.
+export function loadLocalLinks(): Row[] {
+  const db = read();
+  return db.links
+    .filter((l) => l.user_id === LOCAL_USER_ID)
+    .sort((a, b) =>
+      (a.created_at as string) < (b.created_at as string)
+        ? 1
+        : (a.created_at as string) > (b.created_at as string)
+          ? -1
+          : 0,
+    );
+}
+
+// Initial College Tracker data in local mode — the localStorage analogue of the
+// SSR fetch in app/college/page.tsx. Each module's rows for the local user,
+// oldest-first (forms append).
+export function loadLocalCollege() {
+  const db = read();
+  const mine = (table: Tables) =>
+    db[table]
+      .filter((r) => r.user_id === LOCAL_USER_ID)
+      .sort((a, b) =>
+        (a.created_at as string) < (b.created_at as string)
+          ? -1
+          : (a.created_at as string) > (b.created_at as string)
+            ? 1
+            : 0,
+      );
+  return {
+    activities: mine("college_activities"),
+    schools: mine("college_schools"),
+    prompts: mine("essay_prompts"),
+    stories: mine("essay_stories"),
+    drafts: mine("essay_drafts"),
+    courses: mine("college_courses"),
+    tests: mine("college_tests"),
+    honors: mine("college_honors"),
+    recommenders: mine("college_recommenders"),
   };
 }
 

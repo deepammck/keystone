@@ -78,7 +78,7 @@ export function SignInForm() {
           >
             {status === "sending" ? "Signing in…" : "Sign in"}
           </button>
-          {error && <p className="text-xs text-red-500">{error}</p>}
+          {error && <p className="text-xs text-danger">{error}</p>}
         </form>
       )}
       <button
