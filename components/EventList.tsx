@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import type { Event } from "@/lib/types";
 import { formatCountdown, formatEventTime } from "@/lib/utils";
 import { useNow } from "@/lib/hooks/useNow";
@@ -13,7 +13,9 @@ type Props = {
   timezone: string;
 };
 
-export function EventList({ events, onAdd, onDelete, timezone }: Props) {
+// Memoized: it self-ticks via useNow for countdowns, so it needn't also repaint
+// on every unrelated Dashboard re-render (focus-timer tick, habit/task toggle).
+function EventListInner({ events, onAdd, onDelete, timezone }: Props) {
   const now = useNow(30000);
   const [title, setTitle] = useState("");
   const [due, setDue] = useState("");
@@ -104,3 +106,5 @@ export function EventList({ events, onAdd, onDelete, timezone }: Props) {
     </section>
   );
 }
+
+export const EventList = memo(EventListInner);

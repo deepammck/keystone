@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { runOrQueue } from "@/lib/offline-queue";
 import { addDaysIso, formatDayLabel } from "@/lib/utils";
@@ -11,7 +11,9 @@ type Props = {
   initialNote: string;
 };
 
-export function Notepad({ userId, today, initialNote }: Props) {
+// Memoized: props are stable primitives, so the per-second focus-timer tick and
+// habit/task toggles no longer re-render the notepad (and its textarea) at all.
+function NotepadInner({ userId, today, initialNote }: Props) {
   const [date, setDate] = useState(today);
   const [content, setContent] = useState(initialNote);
   // Preview of the day-before's note, surfaced only while the current page is
@@ -148,3 +150,5 @@ export function Notepad({ userId, today, initialNote }: Props) {
     </section>
   );
 }
+
+export const Notepad = memo(NotepadInner);

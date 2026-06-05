@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import type { Task } from "@/lib/types";
 import { TaskItem } from "@/components/TaskItem";
 
@@ -15,7 +15,10 @@ type Props = {
   onDelete: (id: string) => void;
 };
 
-export function TaskList({
+// Memoized so an unrelated Dashboard re-render (per-second focus-timer tick,
+// habit toggle) doesn't repaint the whole task list. Props are useCallback /
+// useState stable, so it only re-renders when tasks actually change.
+function TaskListInner({
   tasks,
   inbox,
   limitMessage,
@@ -139,3 +142,5 @@ export function TaskList({
     </section>
   );
 }
+
+export const TaskList = memo(TaskListInner);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { runOrQueue } from "@/lib/offline-queue";
 import type { Habit } from "@/lib/types";
@@ -18,6 +18,20 @@ export function useHabits(
     new Set(initialDoneIds),
   );
   const [supabase] = useState(() => createClient());
+  // Marks a short window after the user's own write. The upsert echoes straight
+  // back through the postgres_changes subscription; without this guard every
+  // toggle would trigger a full refetch + Set rebuild a few hundred ms later —
+  // a second whole-Dashboard re-render that reads as lag. The optimistic update
+  // already holds the correct state, so we skip the echo and only refetch for
+  // genuinely external changes (another device/tab).
+  const writingUntil = useRef(0);
+  // Mirror of doneIds so `toggle` can read current state without listing it as a
+  // dependency — keeping the callback identity stable so memoized HabitList
+  // isn't re-created (and re-rendered) on unrelated Dashboard updates.
+  const doneIdsRef = useRef(doneIds);
+  useEffect(() => {
+    doneIdsRef.current = doneIds;
+  }, [doneIds]);
 
   const refetch = useCallback(async () => {
     const { data } = await supabase
@@ -47,7 +61,10 @@ export function useHabits(
           table: "habit_logs",
           filter: `user_id=eq.${userId}`,
         },
-        () => refetch(),
+        () => {
+          if (Date.now() < writingUntil.current) return;
+          refetch();
+        },
       )
       .subscribe();
     return () => {
@@ -57,7 +74,9 @@ export function useHabits(
 
   const toggle = useCallback(
     async (habitId: string) => {
-      const next = !doneIds.has(habitId);
+      const next = !doneIdsRef.current.has(habitId);
+      // Suppress the postgres_changes echo of this very write (see writingUntil).
+      writingUntil.current = Date.now() + 2000;
       setDoneIds((prev) => {
         const copy = new Set(prev);
         if (next) copy.add(habitId);
@@ -76,7 +95,7 @@ export function useHabits(
         onConflict: "habit_id,date",
       });
     },
-    [doneIds, supabase, today, userId],
+    [supabase, today, userId],
   );
 
   return { doneIds, toggle, doneCount: doneIds.size, total: habits.length };

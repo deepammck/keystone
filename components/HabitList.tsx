@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import type { Habit } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
 import { addDaysIso } from "@/lib/utils";
@@ -19,7 +19,15 @@ function last7Days(today: string): string[] {
   return Array.from({ length: 7 }, (_, i) => addDaysIso(today, i - 6));
 }
 
-export function HabitList({ habits, doneIds, userId, today, onToggle }: Props) {
+// Memoized: a per-second focus-timer tick (or a task toggle) re-renders the
+// Dashboard, but none of HabitList's props change then, so it skips the repaint.
+export const HabitList = memo(function HabitList({
+  habits,
+  doneIds,
+  userId,
+  today,
+  onToggle,
+}: Props) {
   const [supabase] = useState(() => createClient());
   // habitId -> set of ISO dates it was completed within the trailing window.
   const [history, setHistory] = useState<Record<string, Set<string>>>({});
@@ -81,7 +89,7 @@ export function HabitList({ habits, doneIds, userId, today, onToggle }: Props) {
       </ul>
     </section>
   );
-}
+});
 
 function HabitItem({
   habit,
@@ -129,12 +137,17 @@ function HabitItem({
             </svg>
           )}
         </span>
-        <span
-          className={`flex-1 leading-tight transition-opacity ${
-            done ? "strike text-muted opacity-50" : ""
-          } ${pop ? "strike-draw" : ""}`}
-        >
-          {habit.name}
+        {/* Outer span owns the flex sizing; the inline inner span shrink-wraps
+            to the text so the strike line (width:100% of .strike) spans only the
+            words, not the whole row — and the animated layer stays small. */}
+        <span className="min-w-0 flex-1 leading-tight">
+          <span
+            className={`inline transition-opacity ${
+              done ? "strike text-muted opacity-50" : ""
+            } ${pop ? "strike-draw" : ""}`}
+          >
+            {habit.name}
+          </span>
         </span>
 
         {streak > 0 && (
