@@ -113,9 +113,10 @@ export function Dashboard(props: Props) {
     habits.doneCount;
 
   return (
-    <main className="relative z-10 mx-auto flex max-w-[1080px] flex-col gap-5 px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-6 lg:grid lg:max-w-[1240px] lg:grid-cols-2 lg:items-start xl:max-w-[1400px]">
+    <>
+      <AppSwitcher userId={props.userId} />
+      <main className="relative z-10 mx-auto flex max-w-[1080px] flex-col gap-5 px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-6 lg:grid lg:max-w-[1240px] lg:grid-cols-2 lg:items-start xl:max-w-[1400px]">
       <div className="reveal lg:col-span-2">
-        <AppSwitcher userId={props.userId} />
         <OfflineIndicator online={online} />
 
         <Header
@@ -234,5 +235,6 @@ export function Dashboard(props: Props) {
 
       <CelebrationToast toasts={celebration.toasts} />
     </main>
+    </>
   );
 }

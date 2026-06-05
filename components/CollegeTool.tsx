@@ -34,9 +34,10 @@ export function CollegeTool({
   const [tab, setTab] = useState<(typeof TABS)[number]>("Overview");
 
   return (
-    <main className="relative z-10 mx-auto flex max-w-[880px] flex-col gap-4 px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-6">
+    <>
+      <AppSwitcher userId={userId} />
+      <main className="relative z-10 mx-auto flex max-w-[880px] flex-col gap-4 px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-6">
       <div className="reveal">
-        <AppSwitcher userId={userId} />
         <h1 className="mt-1 font-serif text-3xl font-semibold leading-tight sm:text-4xl">
           College Tracker
         </h1>
@@ -107,5 +108,6 @@ export function CollegeTool({
         )}
       </div>
     </main>
+    </>
   );
 }
