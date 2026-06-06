@@ -40,26 +40,32 @@ export function LinksTool({ userId, initialLinks }: Props) {
   return (
     <>
       <AppSwitcher userId={userId} />
-      <main className="relative z-10 mx-auto flex max-w-[640px] flex-col gap-4 px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-6">
-      <div className="reveal">
+      {/* Two-column on desktop: a sticky left rail holds capture + search while the
+          cards flow into a masonry on the right. Widths match the AppSwitcher
+          (1080/1240/1400) so the nav and content align and the old dead space on
+          either side of the narrow column is filled. Collapses to a single stack
+          below lg. */}
+      <main className="relative z-10 mx-auto flex max-w-[1080px] flex-col gap-4 px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-6 lg:grid lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:items-start lg:gap-6 lg:max-w-[1240px] xl:max-w-[1400px]">
+      <div className="reveal lg:col-span-2">
         <OfflineIndicator online={online} />
         <h1 className="font-serif text-3xl font-semibold leading-tight sm:text-4xl">
           Link Dump
         </h1>
       </div>
 
-      <div className="reveal" style={{ animationDelay: "0.06s" }}>
+      <div
+        className="reveal flex flex-col gap-4 lg:sticky lg:top-6 lg:self-start"
+        style={{ animationDelay: "0.06s" }}
+      >
         <AddLinkForm onAdd={addLink} />
-      </div>
 
-      {/* Search only earns its place once the list is long enough to need it —
-          but also whenever a filter is active (e.g. you clicked a tag), so the
-          clear button is always reachable and you're never stuck filtered. */}
-      {(links.length >= 5 || query.trim()) && (
-        <div className="reveal" style={{ animationDelay: "0.12s" }}>
+        {/* Search only earns its place once the list is long enough to need it —
+            but also whenever a filter is active (e.g. you clicked a tag), so the
+            clear button is always reachable and you're never stuck filtered. */}
+        {(links.length >= 5 || query.trim()) && (
           <SearchBar value={query} onChange={setQuery} />
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="reveal" style={{ animationDelay: "0.18s" }}>
         <LinkList
