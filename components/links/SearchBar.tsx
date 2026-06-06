@@ -1,5 +1,7 @@
 "use client";
 
+import { XIcon } from "@/components/icons";
+
 type Props = {
   value: string;
   onChange: (value: string) => void;
@@ -29,7 +31,7 @@ export function SearchBar({ value, onChange }: Props) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-label="Search saved links"
-        className="min-h-11 w-full rounded-lg bg-tint pl-10 pr-11 outline-none focus:ring-2 focus:ring-accent"
+        className="min-h-11 w-full rounded-lg bg-tint pl-10 pr-11 outline-none focus:ring-2 focus:ring-ring"
       />
       {/* An explicit exit from a search/tag filter — without it, clicking a tag
           can leave you stuck in a filtered view with no obvious way back. */}
@@ -39,9 +41,9 @@ export function SearchBar({ value, onChange }: Props) {
           onClick={() => onChange("")}
           aria-label="Clear filter"
           title="Clear filter"
-          className="press absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-md text-muted hover:bg-bg hover:text-text"
+          className="press absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-md text-muted hover:bg-bg hover:text-text"
         >
-          ✕
+          <XIcon size={15} />
         </button>
       )}
     </div>

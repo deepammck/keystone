@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Link } from "@/lib/types";
+import { XIcon } from "@/components/icons";
 
 function hostname(url: string): string {
   try {
@@ -62,7 +63,7 @@ export function LinkItem({ link, onEdit, onDelete, onTagClick }: Props) {
   }
 
   return (
-    <li className="card group relative rounded-2xl bg-tint p-4 pr-11">
+    <li className="card group relative rounded-2xl bg-tint p-4 sm:pr-11">
       {/* Source identity leads — favicon + domain — so the list scans like a
           set of sources, the title is the primary line, the summary is quiet. */}
       <div className="flex items-center gap-2 text-xs text-muted">
@@ -117,61 +118,104 @@ export function LinkItem({ link, onEdit, onDelete, onTagClick }: Props) {
         </ul>
       )}
 
-      {/* Edit + delete are hidden until hover; delete asks once before removing. */}
-      {armed ? (
-        <div className="absolute right-2 top-2 flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => onDelete(link.id)}
-            className="press rounded-md bg-danger/15 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/25"
-          >
-            Delete?
-          </button>
-          <button
-            type="button"
-            onClick={() => setArmed(false)}
-            aria-label="Keep"
-            className="press rounded-md px-1.5 py-1 text-xs text-muted hover:text-text"
-          >
-            Keep
-          </button>
-        </div>
-      ) : (
-        <div className="absolute right-2 top-2 flex items-center gap-0.5">
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            aria-label="Edit link"
-            title="Edit"
-            className="press grid h-9 w-9 place-items-center rounded-md text-muted opacity-0 transition-opacity hover:bg-bg hover:text-text focus-visible:opacity-100 group-hover:opacity-100"
-          >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M12 20h9" />
-              <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => setArmed(true)}
-            aria-label="Delete link"
-            title="Delete"
-            className="press grid h-9 w-9 place-items-center rounded-md text-muted opacity-0 transition-opacity hover:bg-bg hover:text-text focus-visible:opacity-100 group-hover:opacity-100"
-          >
-            ✕
-          </button>
-        </div>
-      )}
+      {/* Desktop: edit + delete hover-reveal in the top-right corner. */}
+      <div
+        className={`absolute right-2 top-2 hidden items-center gap-0.5 transition-opacity sm:flex ${
+          armed
+            ? "opacity-100"
+            : "opacity-0 focus-within:opacity-100 group-hover:opacity-100"
+        }`}
+      >
+        <LinkActions
+          armed={armed}
+          setArmed={setArmed}
+          onConfirmDelete={() => onDelete(link.id)}
+          onEdit={() => setEditing(true)}
+        />
+      </div>
+
+      {/* Touch: a persistent footer keeps edit + delete reachable where there's
+          no hover to reveal them. */}
+      <div className="mt-3 flex items-center justify-end gap-0.5 border-t border-border/60 pt-1 sm:hidden">
+        <LinkActions
+          armed={armed}
+          setArmed={setArmed}
+          onConfirmDelete={() => onDelete(link.id)}
+          onEdit={() => setEditing(true)}
+        />
+      </div>
     </li>
+  );
+}
+
+// Edit + delete controls, shared by the desktop hover-corner and the mobile
+// footer so both render the same arm-then-confirm delete from one state.
+function LinkActions({
+  armed,
+  setArmed,
+  onConfirmDelete,
+  onEdit,
+}: {
+  armed: boolean;
+  setArmed: (v: boolean) => void;
+  onConfirmDelete: () => void;
+  onEdit: () => void;
+}) {
+  if (armed) {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={onConfirmDelete}
+          className="press rounded-md bg-danger/15 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/25"
+        >
+          Delete?
+        </button>
+        <button
+          type="button"
+          onClick={() => setArmed(false)}
+          aria-label="Keep"
+          className="press rounded-md px-1.5 py-1 text-xs text-muted hover:text-text"
+        >
+          Keep
+        </button>
+      </>
+    );
+  }
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onEdit}
+        aria-label="Edit link"
+        title="Edit"
+        className="press grid h-11 w-11 place-items-center rounded-md text-muted transition-colors hover:bg-bg hover:text-text"
+      >
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        onClick={() => setArmed(true)}
+        aria-label="Delete link"
+        title="Delete"
+        className="press grid h-11 w-11 place-items-center rounded-md text-muted transition-colors hover:bg-bg hover:text-text"
+      >
+        <XIcon size={15} />
+      </button>
+    </>
   );
 }
 
@@ -217,7 +261,7 @@ function LinkEditForm({
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           aria-label="URL"
-          className="min-h-11 w-full rounded-lg bg-bg px-4 text-base font-medium outline-none focus:ring-2 focus:ring-accent"
+          className="min-h-11 w-full rounded-lg bg-bg px-4 text-base font-medium outline-none focus:ring-2 focus:ring-ring"
         />
         <textarea
           rows={3}
@@ -225,7 +269,7 @@ function LinkEditForm({
           value={note}
           onChange={(e) => setNote(e.target.value)}
           aria-label="Note"
-          className="w-full resize-y rounded-lg bg-bg px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent"
+          className="w-full resize-y rounded-lg bg-bg px-4 py-2.5 outline-none focus:ring-2 focus:ring-ring"
         />
         <input
           type="text"
@@ -233,7 +277,7 @@ function LinkEditForm({
           value={tags}
           onChange={(e) => setTags(e.target.value)}
           aria-label="Tags"
-          className="min-h-11 w-full rounded-lg bg-bg px-4 text-sm outline-none focus:ring-2 focus:ring-accent"
+          className="min-h-11 w-full rounded-lg bg-bg px-4 text-sm outline-none focus:ring-2 focus:ring-ring"
         />
         <div className="flex items-center gap-2">
           <button

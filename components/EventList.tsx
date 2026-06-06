@@ -5,6 +5,7 @@ import type { Event } from "@/lib/types";
 import { formatCountdown, formatEventTime } from "@/lib/utils";
 import { useNow } from "@/lib/hooks/useNow";
 import { DateTimePicker } from "@/components/DateTimePicker";
+import { AlertTriangleIcon, XIcon } from "@/components/icons";
 
 type Props = {
   events: Event[];
@@ -60,15 +61,19 @@ function EventListInner({ events, onAdd, onDelete, timezone }: Props) {
                 : diffMs < 7 * 24 * 3600_000
                   ? "text-warning"
                   : "text-accent-soft";
+          // Within 24h (and overdue): flag with an icon so urgency isn't carried
+          // by color alone.
+          const urgent = now > 0 && diffMs < 24 * 3600_000;
           return (
             <li
               key={ev.id}
               className="group flex items-center gap-3"
             >
               <span
-                className={`w-16 shrink-0 font-mono text-sm font-semibold tabular-nums transition-colors ${urgency}`}
+                className={`flex w-20 shrink-0 items-center gap-1 font-mono text-sm font-semibold tabular-nums transition-colors ${urgency}`}
               >
-                {now === 0 ? "·" : formatCountdown(ev.due_at, now)}
+                {urgent && <AlertTriangleIcon size={13} />}
+                <span>{now === 0 ? "·" : formatCountdown(ev.due_at, now)}</span>
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate leading-tight">{ev.title}</p>
@@ -77,9 +82,9 @@ function EventListInner({ events, onAdd, onDelete, timezone }: Props) {
               <button
                 aria-label="Delete event"
                 onClick={() => onDelete(ev.id)}
-                className="h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted opacity-0 transition-opacity hover:bg-tint-strong hover:text-text group-hover:opacity-100 sm:flex"
+                className="press flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted opacity-100 transition-opacity hover:bg-tint-strong hover:text-text sm:opacity-0 sm:group-hover:opacity-100"
               >
-                ×
+                <XIcon size={16} />
               </button>
             </li>
           );
@@ -92,7 +97,7 @@ function EventListInner({ events, onAdd, onDelete, timezone }: Props) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="What's the deadline?"
-            className="min-h-11 w-full rounded-lg bg-bg px-4 outline-none placeholder:text-muted focus:ring-2 focus:ring-accent"
+            className="min-h-11 w-full rounded-lg bg-bg px-4 outline-none placeholder:text-muted focus:ring-2 focus:ring-ring"
           />
           <DateTimePicker value={due} onChange={setDue} timezone={timezone} />
           <button

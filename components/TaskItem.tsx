@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Task } from "@/lib/types";
+import { ArrowRightIcon, XIcon } from "@/components/icons";
 
 type Props = {
   task: Task;
@@ -92,18 +93,20 @@ export function TaskItem({ task, onToggle, onDelete, onMoveToToday }: Props) {
           <button
             aria-label="Move to today"
             onClick={onMoveToToday}
-            className="press shrink-0 rounded-full border border-border px-2 py-1 text-xs text-muted transition-colors hover:border-accent/50 hover:bg-tint hover:text-text"
+            className="press inline-flex min-h-9 shrink-0 items-center gap-1 rounded-full border border-border px-2.5 text-xs text-muted transition-colors hover:border-accent/50 hover:bg-tint hover:text-text"
           >
-            → today
+            <ArrowRightIcon size={12} /> Today
           </button>
         )}
 
+        {/* Visible by default on touch (where there's no hover and swipe-to-delete
+            is undiscoverable); hover-revealed on pointer devices. */}
         <button
           aria-label="Delete task"
           onClick={onDelete}
-          className="press hidden h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted opacity-0 transition-opacity hover:bg-tint hover:text-text group-hover:opacity-100 sm:flex"
+          className="press flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted opacity-100 transition-opacity hover:bg-tint hover:text-text sm:opacity-0 sm:group-hover:opacity-100"
         >
-          ×
+          <XIcon size={16} />
         </button>
       </div>
     </li>

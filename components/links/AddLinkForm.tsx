@@ -59,7 +59,7 @@ export function AddLinkForm({ onAdd }: Props) {
         onChange={update("url")}
         disabled={submitting}
         aria-label="URL"
-        className="min-h-12 w-full rounded-lg bg-bg px-4 text-base font-medium outline-none focus:ring-2 focus:ring-accent"
+        className="min-h-12 w-full rounded-lg bg-bg px-4 text-base font-medium outline-none focus:ring-2 focus:ring-ring"
       />
       {/* The note is the differentiator vs a plain bookmark, so it gets room and
           a labelled, warmer prompt rather than reading like an afterthought. */}
@@ -87,7 +87,7 @@ export function AddLinkForm({ onAdd }: Props) {
         onChange={update("note")}
         disabled={submitting}
         aria-label="Note"
-        className="w-full resize-y rounded-lg bg-bg px-4 py-2.5 outline-none focus:ring-2 focus:ring-accent"
+        className="w-full resize-y rounded-lg bg-bg px-4 py-2.5 outline-none focus:ring-2 focus:ring-ring"
       />
       <input
         type="text"
@@ -96,9 +96,13 @@ export function AddLinkForm({ onAdd }: Props) {
         onChange={update("tags")}
         disabled={submitting}
         aria-label="Tags"
-        className="min-h-11 w-full rounded-lg bg-bg px-4 text-sm outline-none focus:ring-2 focus:ring-accent"
+        className="min-h-11 w-full rounded-lg bg-bg px-4 text-sm outline-none focus:ring-2 focus:ring-ring"
       />
-      {error && <p className="text-sm text-accent">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-danger">
+          {error}
+        </p>
+      )}
       <button
         type="submit"
         disabled={submitting}

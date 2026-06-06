@@ -3,9 +3,10 @@
 // Small shared form/display primitives for the College Tracker modules, styled
 // with Keystone's design tokens (bg-tint, text-muted, accent, .card, .press).
 import { useEffect, useState } from "react";
+import { XIcon } from "@/components/icons";
 
 const inputCls =
-  "min-h-11 w-full rounded-lg bg-bg px-3 outline-none focus:ring-2 focus:ring-accent";
+  "min-h-11 w-full rounded-lg bg-bg px-3 outline-none focus:ring-2 focus:ring-ring";
 
 export function Field({
   label,
@@ -32,7 +33,7 @@ export function Textarea(
   return (
     <textarea
       {...props}
-      className={`w-full resize-y rounded-lg bg-bg px-3 py-2 outline-none focus:ring-2 focus:ring-accent ${props.className ?? ""}`}
+      className={`w-full resize-y rounded-lg bg-bg px-3 py-2 outline-none focus:ring-2 focus:ring-ring ${props.className ?? ""}`}
     />
   );
 }
@@ -213,9 +214,9 @@ export function DeleteButton({
       onClick={() => setArmed(true)}
       aria-label={label}
       title={label}
-      className="press grid h-8 w-8 shrink-0 place-items-center rounded-md text-muted hover:bg-bg hover:text-text"
+      className="press grid h-11 w-11 shrink-0 place-items-center rounded-md text-muted hover:bg-bg hover:text-text"
     >
-      ✕
+      <XIcon size={15} />
     </button>
   );
 }

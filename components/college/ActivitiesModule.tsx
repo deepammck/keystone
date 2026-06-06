@@ -339,7 +339,7 @@ function ActivityCard({
                       ca_rank: e.target.value ? Number(e.target.value) : null,
                     })
                   }
-                  className="h-8 w-14 rounded-md bg-tint px-2 outline-none focus:ring-2 focus:ring-accent"
+                  className="h-8 w-14 rounded-md bg-tint px-2 outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
             )}
@@ -367,7 +367,7 @@ function ActivityCard({
                 onUpdate({ ca_description: ca || null })
               }
               placeholder="Tighten the brain dump down to this"
-              className="mt-1 w-full resize-y rounded-md bg-tint px-2.5 py-1.5 text-sm outline-none focus:ring-2 focus:ring-accent"
+              className="mt-1 w-full resize-y rounded-md bg-tint px-2.5 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
             />
             <div className="mt-1 text-right">
               <CharCounter count={ca.length} limit={LIMITS.activityDescriptionChars} />

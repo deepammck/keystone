@@ -69,7 +69,7 @@ export function SignInForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
-            className="min-h-9 rounded-lg bg-bg px-3 text-sm text-text outline-none placeholder:text-muted focus:ring-2 focus:ring-accent"
+            className="min-h-9 rounded-lg bg-bg px-3 text-sm text-text outline-none placeholder:text-muted focus:ring-2 focus:ring-ring"
           />
           <button
             type="submit"
@@ -78,14 +78,18 @@ export function SignInForm() {
           >
             {status === "sending" ? "Signing in…" : "Sign in"}
           </button>
-          {error && <p className="text-xs text-danger">{error}</p>}
+          {error && (
+            <p role="alert" className="text-xs text-danger">
+              {error}
+            </p>
+          )}
         </form>
       )}
       <button
         type="button"
         aria-label="Password sign-in"
         onClick={() => setShowPassword((v) => !v)}
-        className="flex size-7 items-center justify-center rounded-full text-muted/40 transition-colors hover:text-muted"
+        className="flex size-7 items-center justify-center rounded-full text-muted/60 transition-colors hover:text-muted focus-visible:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <svg
           width="14"
@@ -127,7 +131,8 @@ export function SignInForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@email.com"
-            className="min-h-11 rounded-lg bg-bg px-4 text-center text-text outline-none placeholder:text-muted focus:ring-2 focus:ring-accent"
+            aria-label="Email address"
+            className="min-h-11 rounded-lg bg-bg px-4 text-center text-text outline-none placeholder:text-muted focus:ring-2 focus:ring-ring"
           />
           <button
             type="submit"
@@ -139,7 +144,9 @@ export function SignInForm() {
         </form>
 
         {error && !showPassword && (
-          <p className="text-xs text-red-700">{error}</p>
+          <p role="alert" className="text-xs text-danger">
+            {error}
+          </p>
         )}
       </div>
       {cornerPopover}

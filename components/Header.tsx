@@ -79,7 +79,7 @@ export function Header({
       <button
         aria-label="Settings"
         onClick={onOpenSettings}
-        className="press mt-1 flex h-9 w-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-tint hover:text-text hover:[&_svg]:rotate-45 [&_svg]:transition-transform [&_svg]:duration-300"
+        className="press mt-1 flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-tint hover:text-text hover:[&_svg]:rotate-45 [&_svg]:transition-transform [&_svg]:duration-300"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
           <circle cx="12" cy="12" r="3" />

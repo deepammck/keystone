@@ -4,6 +4,7 @@ import { memo, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { runOrQueue } from "@/lib/offline-queue";
 import { addDaysIso, formatDayLabel } from "@/lib/utils";
+import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
 
 type Props = {
   userId: string;
@@ -95,10 +96,10 @@ function NotepadInner({ userId, today, initialNote }: Props) {
       <div className="flex items-center justify-between">
         <button
           onClick={() => goTo(addDaysIso(date, -1))}
-          className="min-h-9 px-2 text-muted"
+          className="grid h-11 w-11 place-items-center text-muted transition-colors hover:text-text"
           aria-label="Previous day"
         >
-          ‹
+          <ChevronLeftIcon />
         </button>
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium">{formatDayLabel(date)}</span>
@@ -122,10 +123,10 @@ function NotepadInner({ userId, today, initialNote }: Props) {
         <button
           onClick={() => goTo(addDaysIso(date, 1))}
           disabled={isToday}
-          className="min-h-9 px-2 text-muted disabled:opacity-30"
+          className="grid h-11 w-11 place-items-center text-muted transition-colors hover:text-text disabled:opacity-30 disabled:hover:text-muted"
           aria-label="Next day"
         >
-          ›
+          <ChevronRightIcon />
         </button>
       </div>
 
@@ -145,7 +146,7 @@ function NotepadInner({ userId, today, initialNote }: Props) {
         value={content}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Notes for the day…"
-        className="mt-3 min-h-28 flex-1 resize-none rounded-lg bg-bg px-4 py-3 text-sm leading-7 outline-none placeholder:text-muted focus:ring-2 focus:ring-accent lg:min-h-40"
+        className="mt-3 min-h-28 flex-1 resize-none rounded-lg bg-bg px-4 py-3 text-sm leading-7 outline-none placeholder:text-muted focus:ring-2 focus:ring-ring lg:min-h-40"
       />
     </section>
   );

@@ -3,6 +3,7 @@
 import { memo, useState } from "react";
 import type { Task } from "@/lib/types";
 import { TaskItem } from "@/components/TaskItem";
+import { ChevronDownIcon } from "@/components/icons";
 
 type Props = {
   tasks: Task[];
@@ -90,7 +91,7 @@ function TaskListInner({
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder="Add a task…"
-          className={`min-h-11 w-full rounded-lg bg-tint px-4 outline-none placeholder:text-muted focus:ring-2 focus:ring-accent ${
+          className={`min-h-11 w-full rounded-lg bg-tint px-4 outline-none placeholder:text-muted focus:ring-2 focus:ring-ring ${
             empty ? "text-base ring-1 ring-border" : ""
           }`}
         />
@@ -105,10 +106,13 @@ function TaskListInner({
       <div className="mt-3 border-t border-border pt-3">
         <button
           onClick={() => setShowInbox((v) => !v)}
-          className="flex w-full items-center justify-between py-1 text-sm text-muted transition-colors hover:text-text"
+          aria-expanded={showInbox}
+          className="flex min-h-11 w-full items-center justify-between text-sm text-muted transition-colors hover:text-text"
         >
           <span>Inbox · {inbox.length}</span>
-          <span>{showInbox ? "–" : "+"}</span>
+          <ChevronDownIcon
+            className={`transition-transform duration-200 ${showInbox ? "rotate-180" : ""}`}
+          />
         </button>
         {showInbox && (
           <>
@@ -133,7 +137,7 @@ function TaskListInner({
                 value={inboxDraft}
                 onChange={(e) => setInboxDraft(e.target.value)}
                 placeholder="Add to inbox…"
-                className="min-h-11 w-full rounded-lg bg-tint px-4 outline-none placeholder:text-muted focus:ring-2 focus:ring-accent"
+                className="min-h-11 w-full rounded-lg bg-tint px-4 outline-none placeholder:text-muted focus:ring-2 focus:ring-ring"
               />
             </form>
           </>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { formatClock, formatMinutes } from "@/lib/utils";
+import { CheckIcon } from "@/components/icons";
 
 type Phase = "idle" | "running" | "paused";
 
@@ -76,7 +77,9 @@ export function FocusTimer({
             {formatMinutes(todaySeconds)} of {goalMinutes}m
           </span>
           {goalReached && (
-            <span className="font-medium text-accent-soft">Goal met ✓</span>
+            <span className="inline-flex items-center gap-1 font-medium text-accent-soft">
+              <CheckIcon size={13} /> Goal met
+            </span>
           )}
         </div>
         <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-bg">
@@ -136,7 +139,7 @@ export function FocusTimer({
             onChange={(e) => setLabel(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && confirmStop()}
             placeholder="What did you work on? (optional)"
-            className="min-h-11 w-full max-w-xs rounded-lg bg-bg px-4 text-center outline-none placeholder:text-muted focus:ring-2 focus:ring-accent"
+            className="min-h-11 w-full max-w-xs rounded-lg bg-bg px-4 text-center outline-none placeholder:text-muted focus:ring-2 focus:ring-ring"
           />
           <button
             onClick={confirmStop}

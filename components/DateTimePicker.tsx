@@ -9,6 +9,7 @@ import {
   shiftMonth,
   todayInTz,
 } from "@/lib/utils";
+import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
 
 type Props = {
   value: string; // "yyyy-MM-ddTHH:mm" or ""
@@ -81,7 +82,7 @@ export function DateTimePicker({ value, onChange, timezone }: Props) {
       <button
         type="button"
         onClick={() => (open ? setOpen(false) : openPicker())}
-        className="min-h-11 w-full rounded-lg bg-bg px-4 text-left outline-none transition-colors focus:ring-2 focus:ring-accent"
+        className="min-h-11 w-full rounded-lg bg-bg px-4 text-left outline-none transition-colors focus:ring-2 focus:ring-ring"
       >
         {value ? (
           <span>{formatEventTime(value)}</span>
@@ -101,17 +102,17 @@ export function DateTimePicker({ value, onChange, timezone }: Props) {
                 type="button"
                 aria-label="Previous month"
                 onClick={() => setView((v) => shiftMonth(v.year, v.month, -1))}
-                className="press flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-tint-strong hover:text-text"
+                className="press flex h-10 w-10 items-center justify-center rounded-md text-muted transition-colors hover:bg-tint-strong hover:text-text"
               >
-                ‹
+                <ChevronLeftIcon />
               </button>
               <button
                 type="button"
                 aria-label="Next month"
                 onClick={() => setView((v) => shiftMonth(v.year, v.month, 1))}
-                className="press flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-tint-strong hover:text-text"
+                className="press flex h-10 w-10 items-center justify-center rounded-md text-muted transition-colors hover:bg-tint-strong hover:text-text"
               >
-                ›
+                <ChevronRightIcon />
               </button>
             </div>
           </div>
@@ -158,7 +159,7 @@ export function DateTimePicker({ value, onChange, timezone }: Props) {
               type="time"
               value={selectedTime}
               onChange={(e) => changeTime(e.target.value)}
-              className="min-h-9 flex-1 rounded-lg bg-tint px-3 outline-none focus:ring-2 focus:ring-accent"
+              className="min-h-9 flex-1 rounded-lg bg-tint px-3 outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
         </div>
