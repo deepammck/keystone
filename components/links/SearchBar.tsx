@@ -24,7 +24,7 @@ export function SearchBar({ value, onChange }: Props) {
         <path d="M21 21l-4.3-4.3" />
       </svg>
       <input
-        type="search"
+        type="text"
         placeholder="Search your notes and titles…"
         value={value}
         onChange={(e) => onChange(e.target.value)}
