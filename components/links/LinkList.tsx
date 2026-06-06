@@ -38,7 +38,7 @@ export function LinkList({
     );
   }
   return (
-    <ul className="flex flex-col gap-3">
+    <ul className="columns-1 gap-3 sm:columns-2 xl:columns-3 [&>li]:mb-3 [&>li]:break-inside-avoid">
       {links.map((link) => (
         <LinkItem
           key={link.id}
