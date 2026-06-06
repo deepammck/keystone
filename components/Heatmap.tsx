@@ -9,6 +9,7 @@ import {
   formatDayLabel,
   formatMinutes,
 } from "@/lib/utils";
+import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
 
 const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 const WEEKS = 6;
@@ -181,18 +182,18 @@ export function Heatmap({
             </span>
             <button
               onClick={() => setWindowEndWeek((w) => addWeeks(w, -WEEKS))}
-              className="min-h-9 px-2 text-muted"
+              className="grid h-11 w-11 place-items-center text-muted transition-colors hover:text-text"
               aria-label="Earlier weeks"
             >
-              ‹
+              <ChevronLeftIcon />
             </button>
             <button
               onClick={() => setWindowEndWeek((w) => addWeeks(w, WEEKS))}
               disabled={isCurrentWindow}
-              className="min-h-9 px-2 text-muted disabled:opacity-30"
+              className="grid h-11 w-11 place-items-center text-muted transition-colors hover:text-text disabled:opacity-30 disabled:hover:text-muted"
               aria-label="Later weeks"
             >
-              ›
+              <ChevronRightIcon />
             </button>
           </div>
         </div>

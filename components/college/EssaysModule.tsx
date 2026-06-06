@@ -230,7 +230,7 @@ function PromptsView({
                   onChange={(e) =>
                     setForm({ ...form, school_id: e.target.value })
                   }
-                  className="min-h-11 w-full rounded-lg bg-bg px-3 outline-none focus:ring-2 focus:ring-accent"
+                  className="min-h-11 w-full rounded-lg bg-bg px-3 outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="">—</option>
                   {schools.map((s) => (
@@ -536,7 +536,7 @@ function DraftsView({
                 onChange={(e) =>
                   setForm({ ...form, prompt_ref: e.target.value })
                 }
-                className="min-h-11 w-full rounded-lg bg-bg px-3 outline-none focus:ring-2 focus:ring-accent"
+                className="min-h-11 w-full rounded-lg bg-bg px-3 outline-none focus:ring-2 focus:ring-ring"
               >
                 {promptOptions.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -552,7 +552,7 @@ function DraftsView({
                   onChange={(e) =>
                     setForm({ ...form, school_id: e.target.value })
                   }
-                  className="min-h-11 w-full rounded-lg bg-bg px-3 outline-none focus:ring-2 focus:ring-accent"
+                  className="min-h-11 w-full rounded-lg bg-bg px-3 outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="">—</option>
                   {schools.map((s) => (
@@ -671,7 +671,7 @@ function DraftCard({
         onChange={(e) => setBody(e.target.value)}
         onBlur={() => body !== (draft.body ?? "") && onUpdate({ body })}
         placeholder="Write here…"
-        className="mx-auto mt-3 w-full max-w-prose resize-y rounded-lg bg-bg px-4 py-3 text-sm leading-7 outline-none focus:ring-2 focus:ring-accent"
+        className="mx-auto mt-3 w-full max-w-prose resize-y rounded-lg bg-bg px-4 py-3 text-sm leading-7 outline-none focus:ring-2 focus:ring-ring"
       />
       <div className="mt-1.5 flex items-center justify-between gap-3 text-xs">
         <button

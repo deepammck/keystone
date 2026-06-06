@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Habit } from "@/lib/types";
+import { XIcon } from "@/components/icons";
 
 const THEMES = ["light", "dark", "brown", "mocha"] as const;
 
@@ -174,9 +175,9 @@ export function SettingsModal({
             onClick={save}
             disabled={saving}
             aria-label="Close settings"
-            className="press -mr-1 min-h-11 px-2 text-2xl leading-none text-muted hover:text-text disabled:opacity-50"
+            className="press -mr-1 grid h-11 w-11 place-items-center text-muted hover:text-text disabled:opacity-50"
           >
-            ×
+            <XIcon size={20} />
           </button>
         </div>
 
@@ -195,7 +196,7 @@ export function SettingsModal({
                     )
                   }
                   placeholder="New habit"
-                  className="min-h-11 flex-1 rounded-lg bg-tint px-4 outline-none focus:ring-2 focus:ring-accent"
+                  className="min-h-11 flex-1 rounded-lg bg-tint px-4 outline-none focus:ring-2 focus:ring-ring"
                 />
                 <button
                   type="button"
@@ -203,9 +204,9 @@ export function SettingsModal({
                     setHabitRows((prev) => prev.filter((_, j) => j !== i))
                   }
                   aria-label="Remove habit"
-                  className="press min-h-11 px-2 text-xl leading-none text-muted hover:text-text"
+                  className="press grid h-11 w-11 shrink-0 place-items-center text-muted hover:text-text"
                 >
-                  ×
+                  <XIcon size={18} />
                 </button>
               </div>
             ))}
@@ -246,7 +247,7 @@ export function SettingsModal({
           <select
             value={tz}
             onChange={(e) => setTz(e.target.value)}
-            className="mt-2 min-h-11 w-full rounded-lg bg-tint px-4 outline-none focus:ring-2 focus:ring-accent"
+            className="mt-2 min-h-11 w-full rounded-lg bg-tint px-4 outline-none focus:ring-2 focus:ring-ring"
           >
             {TIMEZONES.map((z) => (
               <option key={z.value} value={z.value}>
@@ -264,14 +265,14 @@ export function SettingsModal({
               value={wake}
               onChange={(e) => setWake(e.target.value)}
               aria-label="Wake time"
-              className="min-h-11 flex-1 rounded-lg bg-tint px-4 outline-none focus:ring-2 focus:ring-accent"
+              className="min-h-11 flex-1 rounded-lg bg-tint px-4 outline-none focus:ring-2 focus:ring-ring"
             />
             <input
               type="time"
               value={sleep}
               onChange={(e) => setSleep(e.target.value)}
               aria-label="Sleep time"
-              className="min-h-11 flex-1 rounded-lg bg-tint px-4 outline-none focus:ring-2 focus:ring-accent"
+              className="min-h-11 flex-1 rounded-lg bg-tint px-4 outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
         </div>
@@ -285,7 +286,7 @@ export function SettingsModal({
             value={focusGoal}
             onChange={(e) => setFocusGoal(e.target.value)}
             aria-label="Daily focus goal in minutes"
-            className="mt-2 min-h-11 w-full rounded-lg bg-tint px-4 outline-none focus:ring-2 focus:ring-accent"
+            className="mt-2 min-h-11 w-full rounded-lg bg-tint px-4 outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
 

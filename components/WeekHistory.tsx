@@ -13,6 +13,7 @@ import {
   formatMinutes,
   formatTime24InTz,
 } from "@/lib/utils";
+import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
 
 const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 
@@ -230,10 +231,10 @@ export function WeekHistory({
             <div className="mb-4 flex items-center justify-between">
               <button
                 onClick={() => goToWeek(addWeeks(view.weekStart, -1))}
-                className="min-h-9 px-2 text-muted"
+                className="grid h-11 w-11 place-items-center text-muted transition-colors hover:text-text"
                 aria-label="Previous week"
               >
-                ‹
+                <ChevronLeftIcon />
               </button>
               <span className="text-sm font-medium">
                 {isCurrent ? "This week" : formatWeekRange(view.weekStart)}
@@ -241,10 +242,10 @@ export function WeekHistory({
               <button
                 onClick={() => goToWeek(addWeeks(view.weekStart, 1))}
                 disabled={isCurrent}
-                className="min-h-9 px-2 text-muted disabled:opacity-30"
+                className="grid h-11 w-11 place-items-center text-muted transition-colors hover:text-text disabled:opacity-30 disabled:hover:text-muted"
                 aria-label="Next week"
               >
-                ›
+                <ChevronRightIcon />
               </button>
             </div>
 

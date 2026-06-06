@@ -51,7 +51,7 @@ export function AppSwitcher({ userId }: { userId: string }) {
                 href={tab.href}
                 onClick={() => remember(tab.key)}
                 aria-current={active ? "page" : undefined}
-                className={`press rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                className={`press inline-flex min-h-11 items-center rounded-full px-3.5 text-sm font-medium transition-colors ${
                   active
                     ? "bg-bg text-text shadow-sm"
                     : "text-muted hover:text-text"

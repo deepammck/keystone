@@ -50,7 +50,7 @@
   --accent: #7a5630;
   --accent-soft: #c69a64;
   --on-accent: #efe5d7;
-  --muted: #877a6e;
+  --muted: #ab9b8b;
   --tint: #110e0a;
   --tint-strong: #18130d;
   --border: rgba(120, 84, 52, 0.28);
@@ -68,6 +68,10 @@
   --color-tint: var(--tint);
   --color-tint-strong: var(--tint-strong);
   --color-border: var(--border);
+  /* Focus ring: a guaranteed-visible tone in every theme (accent-soft contrasts
+     in all four), so the ring never collapses into the background — the dark
+     brown accent on near-black was the weak case. */
+  --color-ring: var(--accent-soft);
   --color-danger: #ef4444; /* = Tailwind red-500 */
   --color-warning: #f59e0b; /* = Tailwind amber-500 */
   --text-2xs: 10px;

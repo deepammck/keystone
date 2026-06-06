@@ -63,10 +63,10 @@ export function CollegeTool({
                 type="button"
                 onClick={() => setTab(t)}
                 aria-current={tab === t ? "page" : undefined}
-                className={`press shrink-0 border-b-[3px] px-3 py-2.5 transition-colors ${
+                className={`press shrink-0 border-b-[3px] px-3 py-3 text-sm transition-colors ${
                   tab === t
-                    ? "border-accent text-[15px] font-semibold text-text"
-                    : "border-transparent text-sm font-medium text-muted hover:text-text"
+                    ? "border-accent font-semibold text-text"
+                    : "border-transparent font-medium text-muted hover:text-text"
                 }`}
               >
                 {t}
