@@ -48,7 +48,7 @@ export function LinksTool({ userId, initialLinks }: Props) {
       <main className="relative z-10 mx-auto flex max-w-[1080px] flex-col gap-4 px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-6 lg:grid lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:items-start lg:gap-6 lg:max-w-[1240px] xl:max-w-[1400px]">
       <div className="reveal lg:col-span-2">
         <OfflineIndicator online={online} />
-        <h1 className="font-serif text-3xl font-semibold leading-tight sm:text-4xl">
+        <h1 className="font-mono text-3xl font-medium uppercase leading-tight tracking-[0.04em] sm:text-4xl">
           Link Dump
         </h1>
       </div>

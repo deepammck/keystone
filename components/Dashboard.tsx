@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { Event, Habit, Task } from "@/lib/types";
+import type { Event, Goal, Habit, Task } from "@/lib/types";
 import { useTasks } from "@/lib/hooks/useTasks";
 import { useTimer } from "@/lib/hooks/useTimer";
 import { useHabits } from "@/lib/hooks/useHabits";
 import { useEvents } from "@/lib/hooks/useEvents";
+import { useCollection } from "@/lib/hooks/useCollection";
 import { useRollover } from "@/lib/hooks/useRollover";
 import { useOnline } from "@/lib/hooks/useOnline";
 import { AppSwitcher } from "@/components/AppSwitcher";
@@ -31,6 +32,7 @@ type Props = {
   initialTasks: Task[];
   initialInbox: Task[];
   initialEvents: Event[];
+  initialGoals: Goal[];
   habits: Habit[];
   initialDoneHabitIds: string[];
   initialTodaySeconds: number;
@@ -67,6 +69,18 @@ export function Dashboard(props: Props) {
     props.today,
   );
   const events = useEvents(props.initialEvents, props.userId);
+  const goals = useCollection<Goal>("goals", props.initialGoals, props.userId);
+  // Wrap the collection mutators in stable callbacks so EventList's `memo`
+  // holds — otherwise inline arrows would repaint Deadlines on every timer tick.
+  const { add: addGoalRaw, update: updateGoal, remove: deleteGoal } = goals;
+  const addGoal = useCallback(
+    (title: string) => addGoalRaw({ title, completed: false }),
+    [addGoalRaw],
+  );
+  const toggleGoal = useCallback(
+    (id: string, completed: boolean) => updateGoal(id, { completed: !completed }),
+    [updateGoal],
+  );
   const timer = useTimer(
     props.userId,
     props.timerStartedAt,
@@ -115,7 +129,7 @@ export function Dashboard(props: Props) {
   return (
     <>
       <AppSwitcher userId={props.userId} />
-      <main className="relative z-10 mx-auto flex max-w-[1080px] flex-col gap-5 px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-6 lg:grid lg:max-w-[1240px] lg:grid-cols-2 lg:items-start xl:max-w-[1400px]">
+      <main className="relative z-10 mx-auto flex max-w-[1080px] flex-col gap-3 px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 lg:grid lg:max-w-[1240px] lg:grid-cols-2 lg:gap-x-5 lg:gap-y-3 lg:items-start xl:max-w-[1400px]">
       <div className="reveal lg:col-span-2">
         <OfflineIndicator online={online} />
 
@@ -133,7 +147,7 @@ export function Dashboard(props: Props) {
         />
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         <div className="reveal" style={{ animationDelay: "0.06s" }}>
           <FocusTimer
             phase={timer.phase}
@@ -176,7 +190,7 @@ export function Dashboard(props: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         <div className="reveal" style={{ animationDelay: "0.09s" }}>
           <HabitList
             habits={props.habits}
@@ -191,8 +205,13 @@ export function Dashboard(props: Props) {
           <EventList
             events={events.events}
             onAdd={events.addEvent}
+            onEdit={events.editEvent}
             onDelete={events.deleteEvent}
             timezone={props.timezone}
+            goals={goals.items}
+            onAddGoal={addGoal}
+            onToggleGoal={toggleGoal}
+            onDeleteGoal={deleteGoal}
           />
         </div>
 

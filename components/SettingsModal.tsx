@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Habit } from "@/lib/types";
 import { XIcon } from "@/components/icons";
 
-const THEMES = ["light", "dark", "brown", "mocha"] as const;
+const THEMES = ["mocha", "dark"] as const;
 
 const TIMEZONES = [
   { value: "America/New_York", label: "EST" },
@@ -166,7 +166,7 @@ export function SettingsModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between gap-3">
-          <h2 className="font-serif text-2xl font-semibold">Settings</h2>
+          <h2 className="font-mono text-xl font-medium uppercase tracking-[0.1em]">Settings</h2>
           {/* X saves and closes: there's no separate Save button anymore, so the
               close action must persist habits/timezone/waking-hours/focus-goal
               (theme already auto-saves live). */}

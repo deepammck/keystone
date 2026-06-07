@@ -4,7 +4,7 @@ import { todayInTz, weekStartInTz, weekDatesInTz } from "@/lib/utils";
 import { Dashboard } from "@/components/Dashboard";
 import { LocalDashboard } from "@/components/LocalDashboard";
 import { isLocalMode } from "@/lib/local-mode";
-import type { Event, Habit, Profile, Task } from "@/lib/types";
+import type { Event, Goal, Habit, Profile, Task } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -28,8 +28,16 @@ export default async function DashboardPage() {
   const weekStart = weekStartInTz(timezone);
   const weekDates = weekDatesInTz(timezone);
 
-  const [tasksRes, inboxRes, eventsRes, habitsRes, logsRes, focusRes, noteRes] =
-    await Promise.all([
+  const [
+    tasksRes,
+    inboxRes,
+    eventsRes,
+    goalsRes,
+    habitsRes,
+    logsRes,
+    focusRes,
+    noteRes,
+  ] = await Promise.all([
       supabase.from("tasks").select("*").eq("user_id", user.id).eq("date", today),
       supabase.from("tasks").select("*").eq("user_id", user.id).is("date", null),
       supabase
@@ -37,6 +45,11 @@ export default async function DashboardPage() {
         .select("*")
         .eq("user_id", user.id)
         .order("due_at"),
+      supabase
+        .from("goals")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at"),
       supabase
         .from("habits")
         .select("*")
@@ -64,6 +77,7 @@ export default async function DashboardPage() {
   const tasks = (tasksRes.data ?? []) as Task[];
   const inbox = (inboxRes.data ?? []) as Task[];
   const events = (eventsRes.data ?? []) as Event[];
+  const goals = (goalsRes.data ?? []) as Goal[];
   const habits = (habitsRes.data ?? []) as Habit[];
   const doneHabitIds = (logsRes.data ?? [])
     .filter((r) => r.completed)
@@ -114,6 +128,7 @@ export default async function DashboardPage() {
       initialTasks={tasks}
       initialInbox={inbox}
       initialEvents={events}
+      initialGoals={goals}
       habits={habits}
       initialDoneHabitIds={doneHabitIds}
       initialTodaySeconds={todaySeconds}

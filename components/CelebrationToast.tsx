@@ -27,7 +27,7 @@ export function CelebrationToast({ toasts }: Props) {
             key={t.id}
             className="toast-enter rounded-2xl border border-border bg-bg px-5 py-2.5 shadow"
           >
-            <p className="font-serif text-sm italic text-accent-soft">{t.message}</p>
+            <p className="font-mono text-sm text-accent-soft">{t.message}</p>
           </div>
         ))}
       </div>

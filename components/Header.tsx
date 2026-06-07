@@ -57,7 +57,7 @@ export function Header({
       <div>
         {/* The date is orienting context, not the hero — kept to a quiet overline
             so the eye lands on the progress chips (and the work below) first. */}
-        <h1 className="font-serif text-[15px] font-medium tracking-wide text-muted">
+        <h1 className="font-mono text-[13px] font-medium uppercase tracking-[0.16em] text-muted">
           {formatLongDate(today)}
           {now != null ? ` · ${formatTime24InTz(timezone, now)}` : ""}
         </h1>

@@ -92,7 +92,7 @@ function NotepadInner({ userId, today, initialNote }: Props) {
   const isToday = date === today;
 
   return (
-    <section className="card flex flex-col rounded-2xl bg-tint px-6 py-5">
+    <section className="card flex flex-col rounded-2xl bg-tint px-5 py-4">
       <div className="flex items-center justify-between">
         <button
           onClick={() => goTo(addDaysIso(date, -1))}

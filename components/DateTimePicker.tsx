@@ -94,7 +94,7 @@ export function DateTimePicker({ value, onChange, timezone }: Props) {
       {open && (
         <div className="mt-2 rounded-2xl border border-border bg-bg p-4">
           <div className="mb-3 flex items-center justify-between">
-            <span className="font-serif text-base font-semibold">
+            <span className="font-mono text-sm font-medium uppercase tracking-[0.08em]">
               {monthLabel(view.year, view.month)}
             </span>
             <div className="flex items-center gap-1">

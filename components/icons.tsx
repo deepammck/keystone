@@ -30,6 +30,15 @@ export function XIcon({ size = 16, className }: IconProps) {
   );
 }
 
+export function PencilIcon({ size = 16, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
 export function ChevronLeftIcon({ size = 18, className }: IconProps) {
   return (
     <svg {...base(size)} className={className}>
@@ -74,6 +83,38 @@ export function ArrowRightIcon({ size = 14, className }: IconProps) {
   return (
     <svg {...base(size)} className={className}>
       <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  );
+}
+
+// Transport glyphs are solid (filled) shapes, so they override the outline base.
+export function PlayIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+      className={className}
+    >
+      <path d="M8 5v14l11-7z" />
+    </svg>
+  );
+}
+
+export function PauseIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+      className={className}
+    >
+      <rect x="6" y="5" width="4" height="14" rx="1" />
+      <rect x="14" y="5" width="4" height="14" rx="1" />
     </svg>
   );
 }

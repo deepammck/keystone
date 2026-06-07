@@ -15,6 +15,7 @@ type Tables =
   | "habit_logs"
   | "daily_notes"
   | "events"
+  | "goals"
   | "links"
   | "college_activities"
   | "college_schools"
@@ -38,6 +39,7 @@ const EMPTY: DB = {
   habit_logs: [],
   daily_notes: [],
   events: [],
+  goals: [],
   links: [],
   college_activities: [],
   college_schools: [],
@@ -368,6 +370,17 @@ export function loadLocalInitial(timezone: string) {
     .sort((a, b) =>
       (a.due_at as string) < (b.due_at as string) ? -1 : (a.due_at as string) > (b.due_at as string) ? 1 : 0,
     );
+  // Goals: oldest-first, matching useCollection's created_at asc sort (sort
+  // parity invariant — see CLAUDE.md §2).
+  const goals = db.goals
+    .filter((g) => g.user_id === LOCAL_USER_ID)
+    .sort((a, b) =>
+      (a.created_at as string) < (b.created_at as string)
+        ? -1
+        : (a.created_at as string) > (b.created_at as string)
+          ? 1
+          : 0,
+    );
   const habits = db.habits
     .filter((h) => h.user_id === LOCAL_USER_ID && h.active !== false)
     .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
@@ -410,6 +423,7 @@ export function loadLocalInitial(timezone: string) {
     initialTasks: tasks as any,
     initialInbox: inbox as any,
     initialEvents: events as any,
+    initialGoals: goals as any,
     habits: habits as any,
     initialDoneHabitIds: doneHabitIds,
     initialTodaySeconds: todaySeconds,

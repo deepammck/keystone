@@ -151,7 +151,7 @@ export function TestingModule({
                   {kind} superscore
                 </span>
               </div>
-              <div className="mt-0.5 font-serif text-4xl tabular-nums">
+              <div className="mt-0.5 font-mono text-4xl tabular-nums">
                 {detail.value}
               </div>
               {detail.parts.length > 0 && (

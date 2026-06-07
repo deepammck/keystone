@@ -1,61 +1,53 @@
 @import "tailwindcss";
 
+/* Two themes only: dark (default) and mocha (warm soft light). Both use a
+   mid-tone surface — not pure white / pure black — so neumorphic dual shadows
+   (a light highlight + a dark shadow on one borderless surface) read. */
 :root,
-[data-theme="light"] {
-  --bg: #ffffff;
-  --text: #0a0a0a;
-  --accent: var(--text);
-  --accent-soft: #2b2b2b;
-  --on-accent: var(--bg);
-  --muted: #4b4b4b;
-  --tint: #eeeeee;
-  --tint-strong: #dcdcdc;
-  --border: rgba(0, 0, 0, 0.22);
-  --shadow: rgba(0, 0, 0, 0.45);
-  color-scheme: light;
-}
-
-/* Same as light mode, but the dark tones are warmed to a mocha brown. */
-[data-theme="mocha"] {
-  --bg: #ffffff;
-  --text: #1c130c;
-  --accent: var(--text);
-  --accent-soft: #3a281b;
-  --on-accent: var(--bg);
-  --muted: #5a4a3c;
-  --tint: #eeeeee;
-  --tint-strong: #dcdcdc;
-  --border: rgba(28, 19, 12, 0.22);
-  --shadow: rgba(28, 19, 12, 0.45);
-  color-scheme: light;
-}
-
 [data-theme="dark"] {
-  --bg: #0a0a0a;
-  --text: #ffffff;
+  --bg: #1c1b19;
+  --text: #f3f1ee;
   --accent: var(--text);
-  --accent-soft: #cccccc;
-  --on-accent: var(--bg);
-  --muted: #9a9a9a;
-  --tint: #141414;
-  --tint-strong: #1f1f1f;
-  --border: rgba(255, 255, 255, 0.14);
+  --accent-soft: #d8d3cb;
+  --on-accent: #1c1b19;
+  --muted: #bdb7ad;
+  --tint: #1c1b19;
+  --tint-strong: #232220;
+  --border: rgba(255, 255, 255, 0.05);
   --shadow: rgba(0, 0, 0, 0.7);
+  /* Soft-shadow tone for this surface (dark only — no white highlight). */
+  --neu-dark: rgba(0, 0, 0, 0.6);
   color-scheme: dark;
 }
 
-[data-theme="brown"] {
-  --bg: #000000;
-  --text: #ffffff;
-  --accent: #7a5630;
-  --accent-soft: #c69a64;
-  --on-accent: #efe5d7;
-  --muted: #ab9b8b;
-  --tint: #110e0a;
-  --tint-strong: #18130d;
-  --border: rgba(120, 84, 52, 0.28);
-  --shadow: rgba(0, 0, 0, 0.7);
-  color-scheme: dark;
+/* Warm soft light: a mocha-tinted light gray base so the soft UI looks carved
+   from warm clay rather than washed out on white. */
+[data-theme="mocha"] {
+  --bg: #e8e4dd;
+  --text: #2a201a;
+  --accent: var(--text);
+  --accent-soft: #4a3b2f;
+  --on-accent: #f3efe9;
+  --muted: #564a3d;
+  --tint: #e8e4dd;
+  --tint-strong: #ded8cf;
+  --border: rgba(74, 59, 47, 0.10);
+  --shadow: rgba(74, 59, 47, 0.35);
+  --neu-dark: rgba(120, 104, 86, 0.42);
+  color-scheme: light;
+}
+
+/* Soft-shadow depth recipes — defined once, resolved per theme via --neu-dark.
+   Depth comes from a single soft dark shadow only (no light/white highlight), so
+   surfaces lift and recess without any glowing white rim. Raised = extruded;
+   inset = recessed (inputs, the LCD screen); pressed = the push-in on :active. */
+:root {
+  --neu-raised: 5px 6px 16px var(--neu-dark);
+  --neu-raised-sm: 2px 3px 8px var(--neu-dark);
+  --neu-raised-lift: 7px 9px 22px var(--neu-dark);
+  --neu-inset: inset 3px 4px 9px var(--neu-dark);
+  --neu-inset-deep: inset 4px 6px 13px var(--neu-dark);
+  --neu-pressed: inset 2px 3px 7px var(--neu-dark);
 }
 
 @theme inline {
@@ -75,9 +67,8 @@
   --color-danger: #ef4444; /* = Tailwind red-500 */
   --color-warning: #f59e0b; /* = Tailwind amber-500 */
   --text-2xs: 10px;
-  --font-serif: var(--font-playfair);
   --font-sans: var(--font-dm-sans);
-  --font-mono: ui-monospace, "SF Mono", "Menlo", monospace;
+  --font-mono: var(--font-dm-mono), ui-monospace, "SF Mono", "Menlo", monospace;
 }
 
 html {
@@ -154,24 +145,21 @@ body::after {
    Surfaces
 --------------------------------------------------------------------------- */
 
-/* Hairline-outlined card with depth + a quiet lift on hover. */
+/* Soft UI surface: a borderless slab extruded from the page with a light
+   highlight + dark shadow. A hairline border is kept barely-there for edge
+   definition / accessibility, not as the primary depth cue. */
 .card {
   border: 1px solid var(--border);
-  box-shadow:
-    0 1px 2px color-mix(in oklab, var(--shadow) 10%, transparent),
-    0 10px 30px -20px var(--shadow);
+  background: var(--tint);
+  box-shadow: var(--neu-raised);
   transition:
     transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.3s ease,
-    border-color 0.3s ease;
+    box-shadow 0.3s ease;
 }
 
 .card:hover {
   transform: translateY(-2px);
-  border-color: color-mix(in oklab, var(--accent) 45%, var(--border));
-  box-shadow:
-    0 2px 4px color-mix(in oklab, var(--shadow) 12%, transparent),
-    0 18px 40px -22px var(--shadow);
+  box-shadow: var(--neu-raised-lift);
 }
 
 /* Section heading with a short gold rule underneath as an editorial marker. */
@@ -192,7 +180,7 @@ body::after {
   animation: rule-grow 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Press feedback for buttons. */
+/* Press feedback: soft buttons push *into* the surface on tap. */
 .press {
   transition:
     transform 0.12s ease,
@@ -200,17 +188,74 @@ body::after {
     box-shadow 0.2s ease;
 }
 .press:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
+  box-shadow: var(--neu-pressed);
 }
 
-/* Accent button gains a soft halo + lift on hover. */
+/* Accent (filled) button: still raised, but reads as a solid key. */
 .btn-accent {
-  box-shadow: 0 6px 18px -10px color-mix(in oklab, var(--accent) 80%, transparent);
+  box-shadow: var(--neu-raised-sm);
 }
 .btn-accent:hover {
   filter: brightness(1.06);
-  box-shadow: 0 10px 24px -10px color-mix(in oklab, var(--accent) 90%, transparent);
   transform: translateY(-1px);
+  box-shadow: var(--neu-raised);
+}
+.btn-accent:active {
+  filter: none;
+}
+
+/* Soft (unfilled) raised pill — used for icon/transport buttons and chips. */
+.neu-btn {
+  background: var(--tint);
+  box-shadow: var(--neu-raised-sm);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.2s ease;
+}
+.neu-btn:hover {
+  box-shadow: var(--neu-raised);
+}
+.neu-btn:active {
+  transform: scale(0.97);
+  box-shadow: var(--neu-pressed);
+}
+
+/* Recessed fields: text inputs / textareas / selects sit *in* the surface. */
+.neu-field,
+input[type="text"],
+input[type="search"],
+input[type="time"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+input[type="url"],
+input[type="date"],
+textarea,
+select {
+  box-shadow: var(--neu-inset);
+}
+
+/* Skeuomorphic LCD panel for the focus timer: deeply recessed, faint top-down
+   sheen, large mono digits. */
+.neu-screen {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--neu-dark) 16%, var(--tint)),
+      var(--tint)
+    );
+  box-shadow: var(--neu-inset-deep);
+}
+
+/* Neumorphic segmented control: an inset track holding a raised active thumb. */
+.neu-track {
+  background: var(--tint);
+  box-shadow: var(--neu-inset);
+}
+.neu-thumb {
+  background: var(--tint);
+  box-shadow: var(--neu-raised-sm);
 }
 
 /* ---------------------------------------------------------------------------
@@ -288,13 +333,14 @@ body::after {
   animation: habit-pop 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Slow breathing halo around the running focus timer. */
+/* Slow breathing halo around the running focus timer — layered over the card's
+   raised shadow so the soft extrusion is preserved while it pulses. */
 @keyframes timer-breathe {
   0%, 100% {
-    box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 30%, transparent);
+    box-shadow: var(--neu-raised), 0 0 0 0 color-mix(in oklab, var(--accent) 26%, transparent);
   }
   50% {
-    box-shadow: 0 0 0 16px transparent;
+    box-shadow: var(--neu-raised), 0 0 0 16px transparent;
   }
 }
 .timer-running {
@@ -304,10 +350,10 @@ body::after {
 /* One-shot accent halo when a set is completed. */
 @keyframes bloom {
   0% {
-    box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 35%, transparent);
+    box-shadow: var(--neu-raised), 0 0 0 0 color-mix(in oklab, var(--accent) 35%, transparent);
   }
   100% {
-    box-shadow: 0 0 0 20px transparent;
+    box-shadow: var(--neu-raised), 0 0 0 20px transparent;
   }
 }
 .celebrate-bloom {

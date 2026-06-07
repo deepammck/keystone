@@ -61,6 +61,26 @@ export function useEvents(initial: Event[], userId: string) {
     [supabase, userId],
   );
 
+  const editEvent = useCallback(
+    async (id: string, title: string, dueAtIso: string) => {
+      const trimmed = title.trim();
+      if (!trimmed || !dueAtIso) return;
+      const due_at = new Date(dueAtIso).toISOString();
+      setEvents((prev) =>
+        sortByDue(
+          prev.map((e) => (e.id === id ? { ...e, title: trimmed, due_at } : e)),
+        ),
+      );
+      await runOrQueue(supabase, {
+        table: "events",
+        op: "update",
+        match: { id },
+        payload: { title: trimmed, due_at },
+      });
+    },
+    [supabase],
+  );
+
   const deleteEvent = useCallback(
     async (id: string) => {
       setEvents((prev) => prev.filter((e) => e.id !== id));
@@ -73,5 +93,5 @@ export function useEvents(initial: Event[], userId: string) {
     [supabase],
   );
 
-  return { events, addEvent, deleteEvent };
+  return { events, addEvent, editEvent, deleteEvent };
 }

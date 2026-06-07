@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { formatClock, formatMinutes } from "@/lib/utils";
-import { CheckIcon } from "@/components/icons";
+import { CheckIcon, PlayIcon, PauseIcon, XIcon } from "@/components/icons";
 
 type Phase = "idle" | "running" | "paused";
 
@@ -71,8 +71,8 @@ export function FocusTimer({
   const goalReached = goalSeconds > 0 && todaySeconds >= goalSeconds;
   const progress =
     goalSeconds > 0 ? (
-      <div className="mt-1 w-full max-w-xs">
-        <div className="flex items-center justify-between text-xs text-muted">
+      <div className="mt-3 w-full">
+        <div className="flex items-center justify-between font-mono text-xs text-muted">
           <span className="tabular-nums">
             {formatMinutes(todaySeconds)} of {goalMinutes}m
           </span>
@@ -82,7 +82,7 @@ export function FocusTimer({
             </span>
           )}
         </div>
-        <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-bg">
+        <div className="neu-track mt-1.5 h-2 w-full overflow-hidden rounded-full">
           <div
             className="h-full rounded-full bg-accent transition-[width] duration-500"
             style={{ width: `${goalPct}%` }}
@@ -90,90 +90,126 @@ export function FocusTimer({
         </div>
       </div>
     ) : (
-      <p className="text-xs text-muted">{formatMinutes(todaySeconds)} today</p>
+      <p className="mt-3 font-mono text-[11px] text-muted">
+        {formatMinutes(todaySeconds)} today
+      </p>
     );
 
-  // At rest the card collapses around a hero "Start" button — no dominant empty
-  // 00:00. The tall, breathing treatment is reserved for an actual session.
-  if (phase === "idle") {
-    return (
-      <section
-        className={`card flex flex-col items-center gap-3 rounded-2xl bg-tint px-6 py-6 text-center ${
-          celebrating ? "celebrate-bloom" : ""
-        }`}
-      >
-        <p className="text-sm text-muted">Ready to focus?</p>
-        <button
-          onClick={onStart}
-          className="press btn-accent flex min-h-12 items-center gap-2 rounded-xl bg-accent px-12 text-base font-semibold text-on-accent"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-            <path d="M7 5v14l12-7z" />
-          </svg>
-          Start
-        </button>
-        {progress}
-      </section>
-    );
-  }
+  const statusLabel =
+    phase === "running"
+      ? "Focusing"
+      : phase === "paused"
+        ? "Paused"
+        : "Ready to focus";
+
+  // Transport availability per phase.
+  const canPlay = phase !== "running"; // start (idle) or resume (paused)
+  const canPause = phase === "running";
+  const canLog = phase === "running" || phase === "paused";
 
   return (
     <section
-      className={`card rounded-2xl bg-tint px-6 py-5 text-center ${
+      className={`card flex flex-col items-center rounded-3xl bg-tint px-4 py-3.5 ${
         phase === "running" ? "timer-running" : ""
       } ${celebrating ? "celebrate-bloom" : ""}`}
     >
-      <div
-        className={`text-4xl font-semibold tabular-nums tracking-tight transition-colors duration-500 sm:text-5xl ${
-          phase === "running" ? "text-accent-soft" : ""
-        }`}
-      >
-        {formatClock(elapsed)}
+      {/* Skeuomorphic LCD screen: recessed panel, faint sheen, big mono digits. */}
+      <div className="neu-screen relative w-full rounded-2xl px-5 pb-3.5 pt-3">
+        <p className="text-center font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+          {statusLabel}
+        </p>
+        <div
+          className={`text-center font-mono text-5xl font-medium tabular-nums tracking-tight transition-colors duration-500 ${
+            phase === "running" ? "text-accent-soft" : "text-text"
+          }`}
+        >
+          {formatClock(elapsed)}
+        </div>
       </div>
 
       {labeling ? (
-        <div className="mt-4 flex flex-col items-center gap-3">
+        <div className="mt-3 flex w-full flex-col items-center gap-2.5">
           <input
             autoFocus
+            type="text"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && confirmStop()}
             placeholder="What did you work on? (optional)"
-            className="min-h-11 w-full max-w-xs rounded-lg bg-bg px-4 text-center outline-none placeholder:text-muted focus:ring-2 focus:ring-ring"
+            className="min-h-12 w-full rounded-xl bg-tint px-4 text-center font-mono text-sm outline-none placeholder:text-muted focus:ring-2 focus:ring-ring"
           />
           <button
             onClick={confirmStop}
-            className="press min-h-11 rounded-lg bg-text px-8 font-medium text-bg"
+            className="neu-btn press min-h-12 w-full rounded-xl px-8 font-mono text-sm font-medium uppercase tracking-[0.1em]"
           >
             Save session
           </button>
+          <button
+            onClick={() => setLabeling(false)}
+            className="font-mono text-xs uppercase tracking-[0.1em] text-muted hover:text-text"
+          >
+            Back
+          </button>
         </div>
       ) : (
-        <div className="mt-6 flex flex-col items-center gap-3">
-          <button
-            onClick={phase === "running" ? onPause : onResume}
-            className="press btn-accent min-h-11 rounded-lg bg-accent px-10 font-medium text-on-accent"
-          >
-            {phase === "running" ? "Pause" : "Resume"}
-          </button>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setLabeling(true)}
-              className="press min-h-11 rounded-lg border border-border px-6 text-sm font-medium hover:bg-tint-strong"
+        <>
+          {/* Transport row: play / pause / check, each a soft raised pill. */}
+          <div className="mt-3 grid w-full grid-cols-3 gap-2.5">
+            <TransportButton
+              label={phase === "paused" ? "Resume" : "Start"}
+              onClick={phase === "idle" ? onStart : onResume}
+              disabled={!canPlay}
             >
-              Log
-            </button>
+              <PlayIcon size={20} />
+            </TransportButton>
+            <TransportButton label="Pause" onClick={onPause} disabled={!canPause}>
+              <PauseIcon size={20} />
+            </TransportButton>
+            <TransportButton
+              label="Log session"
+              onClick={() => setLabeling(true)}
+              disabled={!canLog}
+            >
+              <CheckIcon size={20} />
+            </TransportButton>
+          </div>
+
+          {canLog && (
             <button
               onClick={onCancel}
-              className="press min-h-11 rounded-lg border border-border px-6 text-sm font-medium text-muted hover:bg-tint-strong hover:text-text"
+              className="mt-2.5 inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.1em] text-muted hover:text-text"
             >
-              Cancel
+              <XIcon size={13} /> Cancel
             </button>
-          </div>
-        </div>
+          )}
+        </>
       )}
 
-      <div className="mt-6 flex justify-center">{progress}</div>
+      {progress}
     </section>
+  );
+}
+
+function TransportButton({
+  label,
+  onClick,
+  disabled,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      disabled={disabled}
+      className="neu-btn press flex min-h-12 items-center justify-center rounded-xl text-text disabled:cursor-not-allowed disabled:text-muted disabled:opacity-45 disabled:shadow-none"
+    >
+      {children}
+    </button>
   );
 }

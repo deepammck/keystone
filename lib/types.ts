@@ -17,6 +17,17 @@ export type Event = {
   created_at: string;
 };
 
+// A "thing I want to achieve" — a simple checklist item. Rendered as a
+// collapsible sub-area inside the Deadlines section (NOT a new section);
+// driven by the generic useCollection hook.
+export type Goal = {
+  id: string;
+  user_id: string;
+  title: string;
+  completed: boolean;
+  created_at: string;
+};
+
 export type FocusSession = {
   id: string;
   user_id: string;

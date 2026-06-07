@@ -42,7 +42,7 @@ export function AppSwitcher({ userId }: { userId: string }) {
         className="flex items-center border-b border-border pb-3"
         aria-label="Apps"
       >
-        <div className="inline-flex items-center gap-1 rounded-full bg-tint p-1">
+        <div className="neu-track inline-flex items-center gap-1 rounded-full p-1">
           {TABS.map((tab) => {
             const active = pathname === tab.href;
             return (
@@ -51,9 +51,9 @@ export function AppSwitcher({ userId }: { userId: string }) {
                 href={tab.href}
                 onClick={() => remember(tab.key)}
                 aria-current={active ? "page" : undefined}
-                className={`press inline-flex min-h-11 items-center rounded-full px-3.5 text-sm font-medium transition-colors ${
+                className={`press inline-flex min-h-11 items-center rounded-full px-3.5 font-mono text-sm font-medium uppercase tracking-[0.08em] transition-colors ${
                   active
-                    ? "bg-bg text-text shadow-sm"
+                    ? "neu-thumb text-text"
                     : "text-muted hover:text-text"
                 }`}
               >

@@ -273,7 +273,7 @@ export function CharCounter({
 
 export function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="section-title font-serif text-xl font-semibold">{children}</h2>
+    <h2 className="section-title font-mono text-base font-medium uppercase tracking-[0.1em]">{children}</h2>
   );
 }
 

@@ -227,7 +227,7 @@ export function WeekHistory({
         style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
       >
         <div className="overflow-hidden">
-          <div className="card rounded-2xl bg-tint px-6 py-5">
+          <div className="card rounded-2xl bg-tint px-5 py-4">
             <div className="mb-4 flex items-center justify-between">
               <button
                 onClick={() => goToWeek(addWeeks(view.weekStart, -1))}

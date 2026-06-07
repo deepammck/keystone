@@ -118,7 +118,7 @@ export function Overview({
           </div>
         </div>
         <div className="mt-1 flex items-baseline gap-2">
-          <span className="font-serif text-5xl tabular-nums">
+          <span className="font-mono text-5xl tabular-nums">
             {gpaWeighted ? gpa.w : gpaUw.uw}
           </span>
           <span className="text-sm text-muted">
@@ -137,7 +137,7 @@ export function Overview({
               s.primary ? "bg-tint-strong" : "bg-tint"
             }`}
           >
-            <div className={`font-serif ${s.primary ? "text-4xl" : "text-2xl"} tabular-nums`}>
+            <div className={`font-mono ${s.primary ? "text-4xl" : "text-2xl"} tabular-nums`}>
               {s.val}
             </div>
             <div className="mt-1 flex items-center justify-between gap-1">

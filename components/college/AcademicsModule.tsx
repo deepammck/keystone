@@ -89,14 +89,14 @@ export function AcademicsModule({
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="flex flex-1 gap-3">
           <Card className="flex-1 bg-tint-strong text-center">
-            <div className="font-serif text-4xl tabular-nums">{gpa.w}</div>
+            <div className="font-mono text-4xl tabular-nums">{gpa.w}</div>
             <div className="text-sm text-muted">/ 5.0</div>
             <div className="mt-0.5 text-xs uppercase tracking-wide text-muted">
               Weighted
             </div>
           </Card>
           <Card className="flex-1 text-center">
-            <div className="font-serif text-4xl tabular-nums">{gpa.uw}</div>
+            <div className="font-mono text-4xl tabular-nums">{gpa.uw}</div>
             <div className="text-sm text-muted">/ 4.0</div>
             <div className="mt-0.5 text-xs uppercase tracking-wide text-muted">
               Unweighted
@@ -104,7 +104,7 @@ export function AcademicsModule({
           </Card>
         </div>
         <Card className="text-center sm:flex sm:w-32 sm:flex-col sm:justify-center">
-          <div className="font-serif text-2xl tabular-nums">{rigorCount}</div>
+          <div className="font-mono text-2xl tabular-nums">{rigorCount}</div>
           <div className="text-xs uppercase tracking-wide text-muted">
             AP/IB/DE
           </div>

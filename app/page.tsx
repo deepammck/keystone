@@ -10,7 +10,7 @@ export default function Landing() {
   return (
     <main className="min-h-dvh flex flex-col items-center justify-start px-6 pt-[16vh] pb-16">
       <div className="reveal w-full max-w-md rounded-3xl border border-border bg-tint px-8 py-12 text-center shadow-[0_30px_80px_-40px_var(--shadow)]">
-        <h1 className="font-serif text-6xl font-semibold tracking-tight">
+        <h1 className="font-mono text-5xl font-medium uppercase tracking-[0.06em]">
           Keystone
         </h1>
 

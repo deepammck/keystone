@@ -54,7 +54,7 @@ function TaskListInner({
   return (
     <section className="flex flex-col gap-1">
       <div className="mb-2 flex items-baseline justify-between">
-        <h2 className="section-title font-serif text-xl font-semibold">Today</h2>
+        <h2 className="section-title font-mono text-base font-medium uppercase tracking-[0.1em]">Today</h2>
         {!empty && (
           <span
             className={`text-xs font-medium tabular-nums ${
@@ -66,11 +66,6 @@ function TaskListInner({
         )}
       </div>
 
-      {empty && (
-        <p className="py-2 font-serif text-base text-text/80">
-          What&apos;s the one thing today?
-        </p>
-      )}
 
       <ul className="flex flex-col">
         {tasks.map((task) => (

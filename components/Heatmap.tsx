@@ -172,7 +172,7 @@ export function Heatmap({
 
   return (
     <section>
-      <div className="card rounded-2xl bg-tint px-6 py-5">
+      <div className="card rounded-2xl bg-tint px-5 py-4">
         <div className="mb-3 flex items-center justify-between">
           <span className="text-sm font-medium">Progress</span>
           <div className="flex items-center gap-2">

@@ -64,7 +64,7 @@ export const HabitList = memo(function HabitList({
 
   return (
     <section className="flex flex-col gap-1">
-      <h2 className="section-title mb-2 font-serif text-xl font-semibold">Habits</h2>
+      <h2 className="section-title mb-2 font-mono text-base font-medium uppercase tracking-[0.1em]">Habits</h2>
       <ul className="flex flex-col">
         {habits.map((habit) => {
           const done = doneIds.has(habit.id);
@@ -125,10 +125,10 @@ function HabitItem({
         className="group flex min-h-11 w-full items-center gap-3 py-1 text-left"
       >
         <span
-          className={`press flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-2 transition-all duration-150 group-hover:border-accent ${
+          className={`press flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-all duration-150 ${
             done
-              ? "scale-105 border-accent bg-accent text-on-accent"
-              : "border-muted/50 bg-transparent"
+              ? "scale-105 bg-accent text-on-accent [box-shadow:var(--neu-raised-sm)]"
+              : "bg-tint text-transparent [box-shadow:var(--neu-inset)]"
           } ${pop ? "habit-pop" : ""}`}
         >
           {done && (

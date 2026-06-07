@@ -1,18 +1,20 @@
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display, DM_Sans } from "next/font/google";
+import { DM_Sans, DM_Mono } from "next/font/google";
 import "./globals.css";
 import { ServiceWorker } from "@/components/ServiceWorker";
 import { Agentation } from "agentation";
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
-
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
   subsets: ["latin"],
+});
+
+// Monospace display face for the "receipts" chrome — section titles, labels,
+// buttons, the timer LCD, countdowns, and all numerals. Body prose stays DM Sans.
+const dmMono = DM_Mono({
+  variable: "--font-dm-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
@@ -49,12 +51,12 @@ export default function RootLayout({
       lang="en"
       data-theme="dark"
       suppressHydrationWarning
-      className={`${playfair.variable} ${dmSans.variable} h-full`}
+      className={`${dmSans.variable} ${dmMono.variable} h-full`}
     >
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("keystone:theme");if(t==="black"){t="brown";localStorage.setItem("keystone:theme","brown");}if(t)document.documentElement.dataset.theme=t;}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem("keystone:theme");var m={light:"mocha",brown:"dark",black:"dark"};if(t&&m[t]){t=m[t];localStorage.setItem("keystone:theme",t);}if(t)document.documentElement.dataset.theme=t;}catch(e){}})();`,
           }}
         />
       </head>

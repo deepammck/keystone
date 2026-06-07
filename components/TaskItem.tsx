@@ -66,10 +66,10 @@ export function TaskItem({ task, onToggle, onDelete, onMoveToToday }: Props) {
         <button
           aria-label={task.completed ? "Mark incomplete" : "Mark complete"}
           onClick={onToggle}
-          className={`press flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition-[transform,background-color,border-color] duration-150 hover:border-accent ${
+          className={`press flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-[transform,background-color,box-shadow] duration-150 ${
             task.completed
-              ? "scale-105 border-accent bg-accent text-on-accent"
-              : "border-muted/50 bg-transparent"
+              ? "scale-105 bg-accent text-on-accent [box-shadow:var(--neu-raised-sm)]"
+              : "bg-tint text-transparent [box-shadow:var(--neu-inset)]"
           }`}
         >
           {task.completed && (

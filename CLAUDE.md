@@ -22,19 +22,20 @@
 
 ## 2) Authority & Links
 - Build plan: `/Users/dmk-admin/.claude/plans/keystone-single-page-splendid-ocean.md`
-- DB schema + RLS: `supabase/migrations/001_initial.sql`, `002_daily_notes.sql` (daily_notes replaces weekly_reflections), `003_inbox_and_events.sql` (nullable `tasks.date` for inbox + `events` table for deadlines), `004_waking_hours.sql` (`profiles.wake_minute`/`sleep_minute`), `005_focus_goal.sql` (`profiles.focus_goal_minutes`), `006_profile_theme.sql` (`profiles.theme`), `007_links.sql` (`links` table for the Link Dump tool + `profiles.last_app`), `008_college.sql` (9 College Tracker tables)
+- DB schema + RLS: `supabase/migrations/001_initial.sql`, `002_daily_notes.sql` (daily_notes replaces weekly_reflections), `003_inbox_and_events.sql` (nullable `tasks.date` for inbox + `events` table for deadlines), `004_waking_hours.sql` (`profiles.wake_minute`/`sleep_minute`), `005_focus_goal.sql` (`profiles.focus_goal_minutes`), `006_profile_theme.sql` (`profiles.theme`), `007_links.sql` (`links` table for the Link Dump tool + `profiles.last_app`), `008_college.sql` (9 College Tracker tables), `009_goals.sql` (`goals` table for the Goals checklist)
 - Auth/SSR clients: `lib/supabase/`
 - Shared types: `lib/types.ts`
 - Links tool: `links` table + `useLinks` hook + `components/LinksTool.tsx` (+ `components/links/*`); server metadata fetcher at `app/api/fetch-metadata/route.ts` (uses `node-html-parser`). Route `app/links/page.tsx` (SSR in Supabase mode, `components/LocalLinks.tsx` in local mode). Mirrors `useEvents`/`runOrQueue`/local-client conventions.
 - College tool: 9 tables (`college_activities`, `college_schools`, `essay_prompts`, `essay_stories`, `essay_drafts`, `college_courses`, `college_tests`, `college_honors`, `college_recommenders`); generic `useCollection` hook (`lib/hooks/useCollection.ts`); reference data + GPA/word-count/limits in `lib/college-reference.ts`; `components/CollegeTool.tsx` + `components/college/*`. Route `app/college/page.tsx` (SSR `Promise.all` in Supabase mode, `components/LocalCollege.tsx` in local mode). Common App prompts/categories are code constants (verify per cycle), not DB rows; story↔prompt links are `text[]`; draft version history via shared `group_id`.
 - Deadlines: `events` table + `useEvents` hook + `EventList`; countdowns via `formatCountdown` (`lib/utils.ts`) ticked by `useNow` (`lib/hooks/useNow.ts`).
+- Goals: `goals` table (`009_goals.sql`: `id/user_id/title/completed/created_at`) driven by the generic `useCollection` hook (no bespoke hook); rendered by `components/GoalList.tsx` as a collapsible sub-area INSIDE the Deadlines `EventList` `<section>` (like Tasks→Inbox) — it is NOT a seventh section. Wired via `Dashboard` (`useCollection<Goal>("goals", …)`) + `initialGoals` from `app/dashboard/page.tsx` / `loadLocalInitial`.
 - Heatmap: `components/Heatmap.tsx` — compact 6-week combined-activity grid (tasks + focus + habits). Reuses `WeekHistory`'s client-side fetch pattern and `lib/utils.ts` date helpers (`addWeeks`, `weekDatesFromStart`, `formatWeekRange`); no schema changes, works in both local and Supabase mode.
 - Local/server sort parity (invariant): `lib/local-client.ts` re-implements the sort order each hook applies (`useLinks` newest-first, `useCollection`/college oldest-first, `useEvents` by due date). When you change a sort in a hook, update the matching loader in `local-client.ts` (`loadLocalLinks`/`loadLocalCollege`/`loadLocalInitial`) or local and Supabase mode will diverge.
 
 ## 3) Setup / Test
 - `npm install`
 - Local mode (default): leave Supabase env unset/placeholder — no auth, data in `localStorage` (`lib/local-mode.ts`, `lib/local-client.ts`).
-- Supabase mode: set `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `.env.local`, then apply migrations `001` → `008` in order.
+- Supabase mode: set `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `.env.local`, then apply migrations `001` → `009` in order.
 
 ## 4) Workflow
 - `npm run dev` — local dev server
