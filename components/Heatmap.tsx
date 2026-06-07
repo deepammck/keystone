@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   addWeeks,
@@ -42,7 +42,7 @@ type Props = {
 
 type DayStats = { focusSeconds: number; tasks: number; habits: number };
 
-export function Heatmap({
+function HeatmapInner({
   userId,
   today,
   currentWeekStart,
@@ -64,9 +64,14 @@ export function Heatmap({
   const loading = loadedWindow !== windowEndWeek;
 
   // The 6 week rows (oldest on top), each a Mon..Sun list of ISO dates.
-  const weeks = Array.from({ length: WEEKS }, (_, i) =>
-    weekDatesFromStart(addWeeks(windowEndWeek, -(WEEKS - 1 - i))),
+  const weeks = useMemo(
+    () => Array.from({ length: WEEKS }, (_, i) =>
+      weekDatesFromStart(addWeeks(windowEndWeek, -(WEEKS - 1 - i))),
+    ),
+    [windowEndWeek],
   );
+
+  const allDates = useMemo(() => weeks.flat(), [weeks]);
 
   useEffect(() => {
     let cancelled = false;
@@ -118,57 +123,60 @@ export function Heatmap({
     };
   }, [supabase, userId, windowEndWeek, firstWeek]);
 
-  function dayStats(d: string): DayStats {
-    const base = stats[d] ?? { focusSeconds: 0, tasks: 0, habits: 0 };
-    // Overlay today's live values when the current window is in view.
-    if (d === today && isCurrentWindow) {
-      return {
-        focusSeconds: todayFocusSeconds,
-        tasks: todayTasksCompleted,
-        habits: todayHabitsDone,
-      };
-    }
-    return base;
-  }
+  // Memoize all per-cell computations so changes to only one live counter
+  // (e.g. todayFocusSeconds ticking every second) don't recompute every cell.
+  const cellData = useMemo(() => {
+    return weeks.flatMap((week) => week.map((d) => {
+      const base = stats[d] ?? { focusSeconds: 0, tasks: 0, habits: 0 };
+      const s: DayStats = (d === today && isCurrentWindow)
+        ? { focusSeconds: todayFocusSeconds, tasks: todayTasksCompleted, habits: todayHabitsDone }
+        : base;
+      const points =
+        Math.min(s.tasks, TASK_CAP) / TASK_CAP +
+        Math.min(s.focusSeconds / 3600, FOCUS_CAP_H) / FOCUS_CAP_H +
+        (totalHabits ? Math.min(s.habits, totalHabits) / totalHabits : 0);
+      const lvl = points === 0 ? 0 : Math.min(4, Math.ceil((points / 3) * 4));
+      return { d, s, lvl, future: d > today };
+    }));
+  }, [weeks, stats, today, isCurrentWindow, todayFocusSeconds, todayTasksCompleted, todayHabitsDone, totalHabits]);
 
-  function level(s: DayStats): number {
-    const points =
-      Math.min(s.tasks, TASK_CAP) / TASK_CAP +
-      Math.min(s.focusSeconds / 3600, FOCUS_CAP_H) / FOCUS_CAP_H +
-      (totalHabits ? Math.min(s.habits, totalHabits) / totalHabits : 0);
-    return points === 0 ? 0 : Math.min(4, Math.ceil((points / 3) * 4));
-  }
-
-  // Sum of tasks + focus across a list of dates (capped at today, so future
-  // cells never contribute). Pure over props + the loaded `stats`.
-  function totalsFor(dates: string[]): { tasks: number; focusSeconds: number } {
-    let tasks = 0;
-    let focusSeconds = 0;
-    for (const d of dates) {
-      if (d > today) continue;
-      const s = dayStats(d);
-      tasks += s.tasks;
-      focusSeconds += s.focusSeconds;
-    }
-    return { tasks, focusSeconds };
-  }
-
-  // Consecutive active days ending at `today`. Only meaningful when the current
-  // window is in view (today is the newest loaded day).
-  const allDates = weeks.flat();
-  const streak = (() => {
+  const streak = useMemo(() => {
     let count = 0;
     for (let i = allDates.length - 1; i >= 0; i--) {
       const d = allDates[i];
       if (d > today) continue;
-      if (level(dayStats(d)) > 0) count++;
+      const base = stats[d] ?? { focusSeconds: 0, tasks: 0, habits: 0 };
+      const s: DayStats = (d === today && isCurrentWindow)
+        ? { focusSeconds: todayFocusSeconds, tasks: todayTasksCompleted, habits: todayHabitsDone }
+        : base;
+      const points =
+        Math.min(s.tasks, TASK_CAP) / TASK_CAP +
+        Math.min(s.focusSeconds / 3600, FOCUS_CAP_H) / FOCUS_CAP_H +
+        (totalHabits ? Math.min(s.habits, totalHabits) / totalHabits : 0);
+      if (points > 0) count++;
       else break;
     }
     return count;
-  })();
+  }, [allDates, stats, today, isCurrentWindow, todayFocusSeconds, todayTasksCompleted, todayHabitsDone, totalHabits]);
 
-  const thisWeek = totalsFor(weekDatesFromStart(currentWeekStart));
-  const windowTotals = totalsFor(allDates);
+  const { thisWeek, windowTotals } = useMemo(() => {
+    const currentWeekDates = weekDatesFromStart(currentWeekStart);
+    let twTasks = 0, twFocus = 0, wtTasks = 0, wtFocus = 0;
+    for (const cell of cellData) {
+      if (!cell.future) {
+        wtTasks += cell.s.tasks;
+        wtFocus += cell.s.focusSeconds;
+        if (currentWeekDates.includes(cell.d)) {
+          twTasks += cell.s.tasks;
+          twFocus += cell.s.focusSeconds;
+        }
+      }
+    }
+    return {
+      thisWeek: { tasks: twTasks, focusSeconds: twFocus },
+      windowTotals: { tasks: wtTasks, focusSeconds: wtFocus },
+    };
+  }, [cellData, currentWeekStart]);
 
   return (
     <section>
@@ -206,30 +214,23 @@ export function Heatmap({
                   {label}
                 </span>
               ))}
-              {weeks.flatMap((week) =>
-                week.map((d) => {
-                  const future = d > today;
-                  const s = dayStats(d);
-                  const lvl = level(s);
-                  return (
-                    <span
-                      key={d}
-                      title={
-                        future
-                          ? formatDayLabel(d)
-                          : `${formatDayLabel(d)} · ${s.tasks} tasks · ${formatMinutes(
-                              s.focusSeconds,
-                            )} · ${s.habits}/${totalHabits} habits`
-                      }
-                      className={`h-4 w-4 rounded transition-all ${
-                        future
-                          ? "border border-border/50 bg-tint-strong opacity-40"
-                          : LEVEL_CLASS[lvl]
-                      }`}
-                    />
-                  );
-                }),
-              )}
+              {cellData.map(({ d, s, lvl, future }) => (
+                <span
+                  key={d}
+                  title={
+                    future
+                      ? formatDayLabel(d)
+                      : `${formatDayLabel(d)} · ${s.tasks} tasks · ${formatMinutes(
+                          s.focusSeconds,
+                        )} · ${s.habits}/${totalHabits} habits`
+                  }
+                  className={`h-4 w-4 rounded transition-all ${
+                    future
+                      ? "border border-border/50 bg-tint-strong opacity-40"
+                      : LEVEL_CLASS[lvl]
+                  }`}
+                />
+              ))}
             </div>
 
             {/* Intensity legend so the colour ramp reads as a scale, like the
@@ -282,6 +283,8 @@ export function Heatmap({
     </section>
   );
 }
+
+export const Heatmap = memo(HeatmapInner);
 
 // A unit-appropriate glyph + a label under the number so the eye can tell
 // streak (flame) from count (check) from duration (clock) at a glance.

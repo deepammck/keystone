@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { runOrQueue } from "@/lib/offline-queue";
-import type { FocusSession } from "@/lib/types";
+import type { FocusSession, Task } from "@/lib/types";
 import {
   hoursLabel,
   addWeeks,
@@ -17,6 +17,9 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
 
 const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 
+// A finished task, trimmed to what the history list needs.
+type DoneTask = { id: string; text: string; date: string };
+
 type Props = {
   userId: string;
   timezone: string;
@@ -25,6 +28,10 @@ type Props = {
   weekDates: string[];
   weekFocusByDate: Record<string, number>;
   completedTaskDates: string[];
+  // Today's completed tasks, overlaid live on the fetched current week so a task
+  // checked off during the session shows without waiting on a refetch.
+  todayCompletedTasks: Task[];
+  todayCompletedCount: number;
   weekHabitsDone: number;
   totalHabitsPerWeek: number;
   onTodaySessionDeleted: (seconds: number) => void;
@@ -35,6 +42,7 @@ type WeekData = {
   weekDates: string[];
   focusByDate: Record<string, number>;
   completedTaskDates: string[];
+  completedTasks: DoneTask[];
   weekHabitsDone: number;
   sessions: FocusSession[];
 };
@@ -47,7 +55,7 @@ function byDate(sessions: FocusSession[]): Record<string, number> {
   return out;
 }
 
-export function WeekHistory({
+function WeekHistoryInner({
   userId,
   timezone,
   today,
@@ -55,6 +63,8 @@ export function WeekHistory({
   weekDates,
   weekFocusByDate,
   completedTaskDates,
+  todayCompletedTasks,
+  todayCompletedCount,
   weekHabitsDone,
   totalHabitsPerWeek,
   onTodaySessionDeleted,
@@ -72,6 +82,10 @@ export function WeekHistory({
   // don't flash an empty week before the fetch lands.
   const [currentSessions, setCurrentSessions] = useState<FocusSession[]>([]);
   const [currentLoaded, setCurrentLoaded] = useState(false);
+  // Same lazy-fetch story for the current week's finished tasks (props only
+  // carry today's, plus per-day dot dates).
+  const [currentDoneTasks, setCurrentDoneTasks] = useState<DoneTask[]>([]);
+  const [currentTasksLoaded, setCurrentTasksLoaded] = useState(false);
   // Ids deleted this session, so a racing refetch can't resurrect them.
   const deletedIds = useRef<Set<string>>(new Set());
 
@@ -105,12 +119,47 @@ export function WeekHistory({
     };
   }, [open, viewWeekStart, currentWeekStart, todayFocus, supabase, userId]);
 
+  // Fetch the current week's finished tasks alongside the sessions. Re-runs when
+  // today's completed count changes so checking/unchecking a task reflects here.
+  useEffect(() => {
+    if (!open || viewWeekStart !== currentWeekStart) return;
+    let cancelled = false;
+    const weekEnd = addWeeks(currentWeekStart, 1);
+    supabase
+      .from("tasks")
+      .select("id, text, date")
+      .eq("user_id", userId)
+      .eq("completed", true)
+      .gte("date", currentWeekStart)
+      .lt("date", weekEnd)
+      .then(({ data }) => {
+        if (cancelled) return;
+        setCurrentDoneTasks((data ?? []) as DoneTask[]);
+        setCurrentTasksLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, viewWeekStart, currentWeekStart, todayCompletedCount, supabase, userId]);
+
   // Current-week dots come from the fetched sessions once loaded (so deletes
   // reflect immediately on every day), but today is overlaid from props so a
   // freshly-logged session shows without waiting on the refetch.
   const currentFocusByDate = currentLoaded
     ? { ...byDate(currentSessions), [today]: todayFocus }
     : weekFocusByDate;
+
+  // Today's finished tasks come live from props; the rest of the week from the
+  // fetch. Drop the fetched copy of today's rows so a freshly-unchecked task
+  // disappears immediately instead of lingering until the next refetch.
+  const todayDone: DoneTask[] = todayCompletedTasks.map((t) => ({
+    id: t.id,
+    text: t.text,
+    date: today,
+  }));
+  const currentCompletedTasks = currentTasksLoaded
+    ? [...currentDoneTasks.filter((t) => t.date !== today), ...todayDone]
+    : todayDone;
 
   const view: WeekData =
     viewWeekStart === currentWeekStart || !pastData
@@ -119,6 +168,7 @@ export function WeekHistory({
           weekDates,
           focusByDate: currentFocusByDate,
           completedTaskDates,
+          completedTasks: currentCompletedTasks,
           weekHabitsDone,
           sessions: currentSessions,
         }
@@ -142,7 +192,7 @@ export function WeekHistory({
         .lt("date", weekEnd),
       supabase
         .from("tasks")
-        .select("date")
+        .select("id, text, date")
         .eq("user_id", userId)
         .eq("completed", true)
         .gte("date", weekStart)
@@ -159,15 +209,15 @@ export function WeekHistory({
     const sessions = ((focusRes.data ?? []) as FocusSession[]).filter(
       (s) => !deletedIds.current.has(s.id),
     );
-    const taskDates = Array.from(
-      new Set(((tasksRes.data ?? []) as { date: string }[]).map((r) => r.date)),
-    );
+    const completedTasks = (tasksRes.data ?? []) as DoneTask[];
+    const taskDates = Array.from(new Set(completedTasks.map((r) => r.date)));
 
     setPastData({
       weekStart,
       weekDates: dates,
       focusByDate: byDate(sessions),
       completedTaskDates: taskDates,
+      completedTasks,
       weekHabitsDone: (logsRes.data ?? []).length,
       sessions,
     });
@@ -194,17 +244,38 @@ export function WeekHistory({
     });
   }
 
-  const completedSet = new Set(view.completedTaskDates);
-  const filled = view.weekDates.map(
-    (d) => completedSet.has(d) && (view.focusByDate[d] ?? 0) > 0,
-  );
-  const completedDays = filled.filter(Boolean).length;
-  const totalFocus = Object.values(view.focusByDate).reduce((a, b) => a + b, 0);
+  const { filled, completedDays, totalFocus } = useMemo(() => {
+    const completedSet = new Set(view.completedTaskDates);
+    const filled = view.weekDates.map(
+      (d) => completedSet.has(d) && (view.focusByDate[d] ?? 0) > 0,
+    );
+    return {
+      filled,
+      completedDays: filled.filter(Boolean).length,
+      totalFocus: Object.values(view.focusByDate).reduce((a, b) => a + b, 0),
+    };
+  }, [view.completedTaskDates, view.weekDates, view.focusByDate]);
+
   const isCurrent = view.weekStart === currentWeekStart;
 
-  const sortedSessions = [...view.sessions].sort((a, b) =>
-    a.started_at < b.started_at ? 1 : a.started_at > b.started_at ? -1 : 0,
+  const sortedSessions = useMemo(
+    () => [...view.sessions].sort((a, b) =>
+      a.started_at < b.started_at ? 1 : a.started_at > b.started_at ? -1 : 0,
+    ),
+    [view.sessions],
   );
+
+  // Group finished tasks under their day, most recent day first.
+  const { tasksByDay, doneDays, totalDoneTasks } = useMemo(() => {
+    const tasksByDay = new Map<string, DoneTask[]>();
+    for (const t of view.completedTasks) {
+      const arr = tasksByDay.get(t.date);
+      if (arr) arr.push(t);
+      else tasksByDay.set(t.date, [t]);
+    }
+    const doneDays = [...view.weekDates].reverse().filter((d) => tasksByDay.has(d));
+    return { tasksByDay, doneDays, totalDoneTasks: view.completedTasks.length };
+  }, [view.completedTasks, view.weekDates]);
 
   return (
     <section>
@@ -313,9 +384,42 @@ export function WeekHistory({
                 </ul>
               )}
             </div>
+
+            <div className={`mt-5 border-t border-border pt-4 ${loading ? "opacity-40" : ""}`}>
+              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">
+                Finished tasks{totalDoneTasks > 0 ? ` · ${totalDoneTasks}` : ""}
+              </p>
+              {totalDoneTasks === 0 ? (
+                <p className="text-sm text-muted">No tasks finished.</p>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {doneDays.map((d) => (
+                    <div key={d}>
+                      <p className="mb-1.5 text-xs text-muted">{formatDayLabel(d)}</p>
+                      <ul className="flex flex-col gap-1">
+                        {tasksByDay.get(d)!.map((t) => (
+                          <li key={t.id} className="flex items-start gap-2 text-sm">
+                            <span aria-hidden className="mt-0.5 shrink-0 text-accent">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                <path d="M5 13l4 4L19 7" />
+                              </svg>
+                            </span>
+                            <span className="min-w-0 break-words text-muted line-through">
+                              {t.text}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
     </section>
   );
 }
+
+export const WeekHistory = memo(WeekHistoryInner);

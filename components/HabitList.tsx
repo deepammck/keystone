@@ -129,7 +129,7 @@ function HabitItem({
             done
               ? "scale-105 bg-accent text-on-accent [box-shadow:var(--neu-raised-sm)]"
               : "bg-tint text-transparent [box-shadow:var(--neu-inset)]"
-          } ${pop ? "habit-pop" : ""}`}
+          } ${pop ? "check-pop" : ""}`}
         >
           {done && (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { runOrQueue } from "@/lib/offline-queue";
 import type { Event } from "@/lib/types";
@@ -21,19 +21,22 @@ export function useEvents(initial: Event[], userId: string) {
     if (data) setEvents(sortByDue(data as Event[]));
   }, [supabase, userId]);
 
+  const refetchRef = useRef(refetch);
+  useEffect(() => { refetchRef.current = refetch; }, [refetch]);
+
   useEffect(() => {
     const channel = supabase
       .channel("events-changes")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "events", filter: `user_id=eq.${userId}` },
-        () => refetch(),
+        () => refetchRef.current(),
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, userId, refetch]);
+  }, [supabase, userId]);
 
   const addEvent = useCallback(
     async (title: string, dueAtIso: string) => {

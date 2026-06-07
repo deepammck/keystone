@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { runOrQueue } from "@/lib/offline-queue";
 import type { Task } from "@/lib/types";
@@ -28,8 +28,8 @@ export function useTasks(
   const [limitMessage, setLimitMessage] = useState("");
   const [supabase] = useState(() => createClient());
 
-  const todayTasks = sortTasks(tasks);
-  const activeCount = tasks.filter((t) => !t.completed).length;
+  const todayTasks = useMemo(() => sortTasks(tasks), [tasks]);
+  const activeCount = useMemo(() => tasks.filter((t) => !t.completed).length, [tasks]);
 
   const refetch = useCallback(async () => {
     const { data } = await supabase
@@ -43,19 +43,22 @@ export function useTasks(
     }
   }, [supabase, userId, today]);
 
+  const refetchRef = useRef(refetch);
+  useEffect(() => { refetchRef.current = refetch; }, [refetch]);
+
   useEffect(() => {
     const channel = supabase
       .channel("tasks-changes")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "tasks", filter: `user_id=eq.${userId}` },
-        () => refetch(),
+        () => refetchRef.current(),
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, userId, refetch]);
+  }, [supabase, userId]);
 
   const addTask = useCallback(
     async (text: string) => {
@@ -183,6 +186,8 @@ export function useTasks(
     [supabase],
   );
 
+  const completedCount = useMemo(() => tasks.filter((t) => t.completed).length, [tasks]);
+
   return {
     tasks: todayTasks,
     inbox,
@@ -193,7 +198,7 @@ export function useTasks(
     deleteTask,
     limitMessage,
     activeCount,
-    completedCount: tasks.filter((t) => t.completed).length,
+    completedCount,
     totalCount: tasks.length,
   };
 }

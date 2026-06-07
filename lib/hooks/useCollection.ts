@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { runOrQueue } from "@/lib/offline-queue";
 
@@ -29,19 +29,22 @@ export function useCollection<T extends BaseRow>(
     if (data) setItems(sortByCreated(data as T[]));
   }, [supabase, table, userId]);
 
+  const refetchRef = useRef(refetch);
+  useEffect(() => { refetchRef.current = refetch; }, [refetch]);
+
   useEffect(() => {
     const channel = supabase
       .channel(`${table}-changes`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table, filter: `user_id=eq.${userId}` },
-        () => refetch(),
+        () => refetchRef.current(),
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, table, userId, refetch]);
+  }, [supabase, table, userId]);
 
   // Insert. The caller passes the column values; id/user_id/created_at are
   // filled in here so the optimistic row matches what the DB will store.

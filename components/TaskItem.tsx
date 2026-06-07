@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import type { Task } from "@/lib/types";
 import { ArrowRightIcon, XIcon } from "@/components/icons";
 
 type Props = {
   task: Task;
-  onToggle: () => void;
-  onDelete: () => void;
-  onMoveToToday?: () => void;
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
+  onMoveToToday?: (id: string) => void;
 };
 
-export function TaskItem({ task, onToggle, onDelete, onMoveToToday }: Props) {
+function TaskItemInner({ task, onToggle, onDelete, onMoveToToday }: Props) {
   const [offset, setOffset] = useState(0);
   const [pop, setPop] = useState(false);
   const startX = useRef<number | null>(null);
@@ -45,7 +45,7 @@ export function TaskItem({ task, onToggle, onDelete, onMoveToToday }: Props) {
     if (dx < 0) setOffset(Math.max(dx, -96));
   }
   function onPointerUp() {
-    if (offset <= -64) onDelete();
+    if (offset <= -64) onDelete(task.id);
     setOffset(0);
     startX.current = null;
   }
@@ -65,12 +65,12 @@ export function TaskItem({ task, onToggle, onDelete, onMoveToToday }: Props) {
       >
         <button
           aria-label={task.completed ? "Mark incomplete" : "Mark complete"}
-          onClick={onToggle}
+          onClick={() => onToggle(task.id)}
           className={`press flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-[transform,background-color,box-shadow] duration-150 ${
             task.completed
               ? "scale-105 bg-accent text-on-accent [box-shadow:var(--neu-raised-sm)]"
               : "bg-tint text-transparent [box-shadow:var(--neu-inset)]"
-          }`}
+          } ${pop ? "check-pop" : ""}`}
         >
           {task.completed && (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
@@ -92,7 +92,7 @@ export function TaskItem({ task, onToggle, onDelete, onMoveToToday }: Props) {
         {onMoveToToday && (
           <button
             aria-label="Move to today"
-            onClick={onMoveToToday}
+            onClick={() => onMoveToToday(task.id)}
             className="press inline-flex min-h-9 shrink-0 items-center gap-1 rounded-full border border-border px-2.5 text-xs text-muted transition-colors hover:border-accent/50 hover:bg-tint hover:text-text"
           >
             <ArrowRightIcon size={12} /> Today
@@ -103,7 +103,7 @@ export function TaskItem({ task, onToggle, onDelete, onMoveToToday }: Props) {
             is undiscoverable); hover-revealed on pointer devices. */}
         <button
           aria-label="Delete task"
-          onClick={onDelete}
+          onClick={() => onDelete(task.id)}
           className="press flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted opacity-100 transition-opacity hover:bg-tint hover:text-text sm:opacity-0 sm:group-hover:opacity-100"
         >
           <XIcon size={16} />
@@ -112,3 +112,5 @@ export function TaskItem({ task, onToggle, onDelete, onMoveToToday }: Props) {
     </li>
   );
 }
+
+export const TaskItem = memo(TaskItemInner);

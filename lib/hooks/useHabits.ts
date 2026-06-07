@@ -50,6 +50,9 @@ export function useHabits(
     }
   }, [supabase, userId, today]);
 
+  const refetchRef = useRef(refetch);
+  useEffect(() => { refetchRef.current = refetch; }, [refetch]);
+
   useEffect(() => {
     const channel = supabase
       .channel("habit-log-changes")
@@ -63,14 +66,14 @@ export function useHabits(
         },
         () => {
           if (Date.now() < writingUntil.current) return;
-          refetch();
+          refetchRef.current();
         },
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, userId, refetch]);
+  }, [supabase, userId]);
 
   const toggle = useCallback(
     async (habitId: string) => {

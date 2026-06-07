@@ -37,6 +37,8 @@ export default async function DashboardPage() {
     logsRes,
     focusRes,
     noteRes,
+    weekTasksRes,
+    weekLogsRes,
   ] = await Promise.all([
       supabase.from("tasks").select("*").eq("user_id", user.id).eq("date", today),
       supabase.from("tasks").select("*").eq("user_id", user.id).is("date", null),
@@ -72,6 +74,18 @@ export default async function DashboardPage() {
         .eq("user_id", user.id)
         .eq("date", today)
         .maybeSingle(),
+      supabase
+        .from("tasks")
+        .select("date")
+        .eq("user_id", user.id)
+        .eq("completed", true)
+        .gte("date", weekStart),
+      supabase
+        .from("habit_logs")
+        .select("date")
+        .eq("user_id", user.id)
+        .eq("completed", true)
+        .gte("date", weekStart),
     ]);
 
   const tasks = (tasksRes.data ?? []) as Task[];
@@ -91,27 +105,10 @@ export default async function DashboardPage() {
     .filter((r) => r.date === today)
     .reduce((sum, r) => sum + r.duration_seconds, 0);
 
-  // Week-level data for the pulse: per-day focus seconds + which days had a
-  // completed task / focus session / habit completion.
   const weekFocusByDate: Record<string, number> = {};
   for (const r of focusRows) {
     weekFocusByDate[r.date] = (weekFocusByDate[r.date] ?? 0) + r.duration_seconds;
   }
-
-  const [weekTasksRes, weekLogsRes] = await Promise.all([
-    supabase
-      .from("tasks")
-      .select("date, completed")
-      .eq("user_id", user.id)
-      .eq("completed", true)
-      .gte("date", weekStart),
-    supabase
-      .from("habit_logs")
-      .select("date, completed")
-      .eq("user_id", user.id)
-      .eq("completed", true)
-      .gte("date", weekStart),
-  ]);
 
   const completedTaskDates = new Set(
     (weekTasksRes.data ?? []).map((r) => r.date as string),

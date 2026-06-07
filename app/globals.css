@@ -323,14 +323,14 @@ select {
   to { transform: translateY(-50%) scaleX(1); }
 }
 
-/* A satisfying overshoot pop when a habit checkbox is marked done. */
-@keyframes habit-pop {
+/* A satisfying overshoot pop when a task/habit checkbox is marked done. */
+@keyframes check-pop {
   0% { transform: scale(1); }
   45% { transform: scale(1.28); }
   100% { transform: scale(1.05); }
 }
-.habit-pop {
-  animation: habit-pop 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
+.check-pop {
+  animation: check-pop 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Slow breathing halo around the running focus timer — layered over the card's
@@ -344,6 +344,7 @@ select {
   }
 }
 .timer-running {
+  will-change: box-shadow;
   animation: timer-breathe 2.6s ease-in-out infinite;
 }
 
@@ -390,7 +391,7 @@ select {
   .reveal,
   .check-path,
   .strike.strike-draw::after,
-  .habit-pop,
+  .check-pop,
   .timer-running,
   .section-title::after,
   .animate-shake,

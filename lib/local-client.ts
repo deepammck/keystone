@@ -31,33 +31,37 @@ type DB = Record<Tables, Row[]>;
 
 const KEY = "keystone:local-db";
 
-const EMPTY: DB = {
-  profiles: [],
-  tasks: [],
-  focus_sessions: [],
-  habits: [],
-  habit_logs: [],
-  daily_notes: [],
-  events: [],
-  goals: [],
-  links: [],
-  college_activities: [],
-  college_schools: [],
-  essay_prompts: [],
-  essay_stories: [],
-  essay_drafts: [],
-  college_courses: [],
-  college_tests: [],
-  college_honors: [],
-  college_recommenders: [],
-};
+// Returns a fresh empty DB object — called instead of structuredClone(EMPTY)
+// so we avoid deep-cloning a large constant on every query.
+function emptyDB(): DB {
+  return {
+    profiles: [],
+    tasks: [],
+    focus_sessions: [],
+    habits: [],
+    habit_logs: [],
+    daily_notes: [],
+    events: [],
+    goals: [],
+    links: [],
+    college_activities: [],
+    college_schools: [],
+    essay_prompts: [],
+    essay_stories: [],
+    essay_drafts: [],
+    college_courses: [],
+    college_tests: [],
+    college_honors: [],
+    college_recommenders: [],
+  };
+}
 
 function read(): DB {
-  if (typeof window === "undefined") return structuredClone(EMPTY);
+  if (typeof window === "undefined") return emptyDB();
   try {
-    return { ...structuredClone(EMPTY), ...JSON.parse(localStorage.getItem(KEY) ?? "{}") };
+    return { ...emptyDB(), ...JSON.parse(localStorage.getItem(KEY) ?? "{}") };
   } catch {
-    return structuredClone(EMPTY);
+    return emptyDB();
   }
 }
 

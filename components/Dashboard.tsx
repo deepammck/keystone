@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Event, Goal, Habit, Task } from "@/lib/types";
 import { useTasks } from "@/lib/hooks/useTasks";
 import { useTimer } from "@/lib/hooks/useTimer";
@@ -113,14 +113,15 @@ export function Dashboard(props: Props) {
   // The week stats arrive as a server snapshot from page load. Overlay today's
   // live values so the "This week" pulse stays in sync as the user toggles
   // habits, completes tasks, and logs focus during the session.
-  const liveWeekFocusByDate = {
-    ...props.weekFocusByDate,
-    [props.today]: timer.todaySeconds,
-  };
-  const liveCompletedTaskDates = props.completedTaskDates.filter(
-    (d) => d !== props.today,
+  const liveWeekFocusByDate = useMemo(
+    () => ({ ...props.weekFocusByDate, [props.today]: timer.todaySeconds }),
+    [props.weekFocusByDate, props.today, timer.todaySeconds],
   );
-  if (tasks.completedCount > 0) liveCompletedTaskDates.push(props.today);
+  const liveCompletedTaskDates = useMemo(() => {
+    const dates = props.completedTaskDates.filter((d) => d !== props.today);
+    if (tasks.completedCount > 0) dates.push(props.today);
+    return dates;
+  }, [props.completedTaskDates, props.today, tasks.completedCount]);
   const liveWeekHabitsDone =
     props.weekHabitsDone -
     props.initialDoneHabitIds.length +
@@ -232,6 +233,8 @@ export function Dashboard(props: Props) {
             weekDates={props.weekDates}
             weekFocusByDate={liveWeekFocusByDate}
             completedTaskDates={liveCompletedTaskDates}
+            todayCompletedTasks={tasks.tasks.filter((t) => t.completed)}
+            todayCompletedCount={tasks.completedCount}
             weekHabitsDone={liveWeekHabitsDone}
             totalHabitsPerWeek={props.habits.length * 7}
             onTodaySessionDeleted={(seconds) => timer.adjustToday(-seconds)}

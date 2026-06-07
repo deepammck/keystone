@@ -72,8 +72,8 @@ function TaskListInner({
           <TaskItem
             key={task.id}
             task={task}
-            onToggle={() => onToggle(task.id)}
-            onDelete={() => onDelete(task.id)}
+            onToggle={onToggle}
+            onDelete={onDelete}
           />
         ))}
       </ul>
@@ -121,9 +121,9 @@ function TaskListInner({
                 <TaskItem
                   key={task.id}
                   task={task}
-                  onToggle={() => onToggle(task.id)}
-                  onDelete={() => onDelete(task.id)}
-                  onMoveToToday={() => onMoveToToday(task.id)}
+                  onToggle={onToggle}
+                  onDelete={onDelete}
+                  onMoveToToday={onMoveToToday}
                 />
               ))}
             </ul>
