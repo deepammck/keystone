@@ -137,10 +137,9 @@ function HabitItem({
             </svg>
           )}
         </span>
-        {/* Outer span owns the flex sizing; the inline inner span shrink-wraps
-            to the text so the strike line (width:100% of .strike) spans only the
-            words, not the whole row — and the animated layer stays small. */}
-        <span className="min-w-0 flex-1 leading-tight">
+        {/* Outer span owns flex sizing; inner inline span gets text-decoration
+            line-through from .strike, correctly centered per line. */}
+        <span className="min-w-0 flex-1 break-words leading-tight">
           <span
             className={`inline transition-opacity ${
               done ? "strike text-muted opacity-50" : ""

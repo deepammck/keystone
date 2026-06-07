@@ -295,32 +295,20 @@ select {
   animation: draw 0.3s ease-out both;
 }
 
-/* Strikethrough that draws across the label when an item is completed. The
-   line is present (scaleX 1) whenever an item is struck; .strike-draw replays
-   the left-to-right wipe only at the moment it's checked off. */
+/* Strikethrough via native text-decoration so the line is always centered per
+   line on multi-line text. .strike-draw fades the line in at the moment of
+   check-off. */
 .strike {
-  position: relative;
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: currentColor;
 }
-.strike::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  height: 1.5px;
-  width: 100%;
-  background: currentColor;
-  transform-origin: left center;
-  transform: translateY(-50%) scaleX(1);
-}
-.strike.strike-draw::after {
-  /* Promote the line to its own GPU layer for the duration of the wipe so the
-     text underneath isn't repainted every frame (the source of the jank). */
-  will-change: transform;
+.strike.strike-draw {
   animation: strike-draw 0.34s cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes strike-draw {
-  from { transform: translateY(-50%) scaleX(0); }
-  to { transform: translateY(-50%) scaleX(1); }
+  from { text-decoration-color: transparent; }
+  to { text-decoration-color: currentColor; }
 }
 
 /* A satisfying overshoot pop when a task/habit checkbox is marked done. */

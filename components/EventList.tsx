@@ -2,11 +2,10 @@
 
 import { memo, useState } from "react";
 import { format } from "date-fns";
-import type { Event, Goal } from "@/lib/types";
+import type { Event } from "@/lib/types";
 import { formatCountdown, formatEventTime } from "@/lib/utils";
 import { useNow } from "@/lib/hooks/useNow";
 import { DateTimePicker } from "@/components/DateTimePicker";
-import { GoalList } from "@/components/GoalList";
 import { AlertTriangleIcon, PencilIcon, XIcon } from "@/components/icons";
 
 type Props = {
@@ -15,10 +14,6 @@ type Props = {
   onEdit: (id: string, title: string, dueAtIso: string) => void;
   onDelete: (id: string) => void;
   timezone: string;
-  goals: Goal[];
-  onAddGoal: (title: string) => void;
-  onToggleGoal: (id: string, completed: boolean) => void;
-  onDeleteGoal: (id: string) => void;
 };
 
 // The stored due_at is an ISO/UTC string; the picker speaks local
@@ -36,10 +31,6 @@ function EventListInner({
   onEdit,
   onDelete,
   timezone,
-  goals,
-  onAddGoal,
-  onToggleGoal,
-  onDeleteGoal,
 }: Props) {
   const now = useNow(30000);
   const [title, setTitle] = useState("");
@@ -195,13 +186,6 @@ function EventListInner({
           </button>
         </form>
       )}
-
-      <GoalList
-        goals={goals}
-        onAdd={onAddGoal}
-        onToggle={onToggleGoal}
-        onDelete={onDeleteGoal}
-      />
     </section>
   );
 }

@@ -70,16 +70,12 @@ export function Dashboard(props: Props) {
   );
   const events = useEvents(props.initialEvents, props.userId);
   const goals = useCollection<Goal>("goals", props.initialGoals, props.userId);
-  // Wrap the collection mutators in stable callbacks so EventList's `memo`
-  // holds — otherwise inline arrows would repaint Deadlines on every timer tick.
-  const { add: addGoalRaw, update: updateGoal, remove: deleteGoal } = goals;
+  // Wrap `add` in a stable callback so the GoalBanner only needs a title (the
+  // unused `completed` flag is supplied here).
+  const { add: addGoalRaw, remove: deleteGoal } = goals;
   const addGoal = useCallback(
     (title: string) => addGoalRaw({ title, completed: false }),
     [addGoalRaw],
-  );
-  const toggleGoal = useCallback(
-    (id: string, completed: boolean) => updateGoal(id, { completed: !completed }),
-    [updateGoal],
   );
   const timer = useTimer(
     props.userId,
@@ -144,6 +140,9 @@ export function Dashboard(props: Props) {
           totalHabits={habits.total}
           wakeMinute={props.wakeMinute}
           sleepMinute={props.sleepMinute}
+          goals={goals.items}
+          onAddGoal={addGoal}
+          onDeleteGoal={deleteGoal}
           onOpenSettings={() => setSettingsOpen(true)}
         />
       </div>
@@ -209,10 +208,6 @@ export function Dashboard(props: Props) {
             onEdit={events.editEvent}
             onDelete={events.deleteEvent}
             timezone={props.timezone}
-            goals={goals.items}
-            onAddGoal={addGoal}
-            onToggleGoal={toggleGoal}
-            onDeleteGoal={deleteGoal}
           />
         </div>
 

@@ -9,6 +9,8 @@ import {
   wakingPercentLeft,
 } from "@/lib/utils";
 import { useNow } from "@/lib/hooks/useNow";
+import { GoalBanner } from "@/components/GoalBanner";
+import type { Goal } from "@/lib/types";
 
 type Props = {
   timezone: string;
@@ -20,6 +22,9 @@ type Props = {
   totalHabits: number;
   wakeMinute: number;
   sleepMinute: number;
+  goals: Goal[];
+  onAddGoal: (title: string) => void;
+  onDeleteGoal: (id: string) => void;
   onOpenSettings: () => void;
 };
 
@@ -33,6 +38,9 @@ export function Header({
   totalHabits,
   wakeMinute,
   sleepMinute,
+  goals,
+  onAddGoal,
+  onDeleteGoal,
   onOpenSettings,
 }: Props) {
   const now = useNow(60000);
@@ -53,8 +61,8 @@ export function Header({
       : null;
 
   return (
-    <header className="flex items-start justify-between">
-      <div>
+    <header className="flex flex-wrap items-start gap-x-4 gap-y-2">
+      <div className="order-1">
         {/* The date is orienting context, not the hero — kept to a quiet overline
             so the eye lands on the progress chips (and the work below) first. */}
         <h1 className="font-mono text-[13px] font-medium uppercase tracking-[0.16em] text-muted">
@@ -76,10 +84,17 @@ export function Header({
           )}
         </div>
       </div>
+
+      {/* Always-visible goals fill the header's dead band between the chips and
+          the gear on desktop; on narrow screens they wrap to their own row. */}
+      <div className="order-3 w-full self-center lg:order-2 lg:w-auto lg:min-w-0 lg:flex-1">
+        <GoalBanner goals={goals} onAdd={onAddGoal} onDelete={onDeleteGoal} />
+      </div>
+
       <button
         aria-label="Settings"
         onClick={onOpenSettings}
-        className="press mt-1 flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-tint hover:text-text hover:[&_svg]:rotate-45 [&_svg]:transition-transform [&_svg]:duration-300"
+        className="press order-2 ml-auto mt-1 flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-tint hover:text-text hover:[&_svg]:rotate-45 [&_svg]:transition-transform [&_svg]:duration-300 lg:order-3 lg:ml-0"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
           <circle cx="12" cy="12" r="3" />

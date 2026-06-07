@@ -79,7 +79,7 @@ function TaskItemInner({ task, onToggle, onDelete, onMoveToToday }: Props) {
           )}
         </button>
 
-        <span className="flex-1 leading-tight">
+        <span className="min-w-0 flex-1 break-words leading-tight">
           <span
             className={`inline transition-opacity ${
               task.completed ? "strike text-muted opacity-50" : ""
