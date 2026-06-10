@@ -51,7 +51,7 @@ function TaskItemInner({ task, onToggle, onDelete, onMoveToToday }: Props) {
   }
 
   return (
-    <li className="group relative overflow-hidden">
+    <li className="group relative -ml-1 overflow-hidden pl-1">
       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-sm text-red-700">
         Delete
       </div>
