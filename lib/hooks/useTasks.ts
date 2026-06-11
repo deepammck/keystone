@@ -47,19 +47,42 @@ export function useTasks(
   const refetchRef = useRef(refetch);
   useEffect(() => { refetchRef.current = refetch; }, [refetch]);
 
+  // Optimistic writes update local state instantly; the realtime subscription
+  // then refetches on the resulting postgres change. But a refetch that fires
+  // before the write is committed/visible — or one triggered by a stale event
+  // from a prior mutation — re-reads the row as unchanged and CLOBBERS the
+  // optimistic value (e.g. a freshly-checked task snapping back to incomplete,
+  // dropping the X/5 count). So after any local write we hold refetches in a
+  // short quiet window and run a single trailing refetch once the write has
+  // settled; cross-device changes still arrive on that trailing pass.
+  const quietUntilRef = useRef(0);
+  const refetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const markLocalWrite = useCallback(() => {
+    quietUntilRef.current = Date.now() + 1500;
+  }, []);
+  const scheduleRefetch = useCallback(() => {
+    const wait = Math.max(0, quietUntilRef.current - Date.now());
+    if (refetchTimerRef.current) clearTimeout(refetchTimerRef.current);
+    refetchTimerRef.current = setTimeout(() => {
+      refetchTimerRef.current = null;
+      refetchRef.current();
+    }, wait);
+  }, []);
+
   useEffect(() => {
     const channel = supabase
       .channel("tasks-changes")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "tasks", filter: `user_id=eq.${userId}` },
-        () => refetchRef.current(),
+        () => scheduleRefetch(),
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
+      if (refetchTimerRef.current) clearTimeout(refetchTimerRef.current);
     };
-  }, [supabase, userId]);
+  }, [supabase, userId, scheduleRefetch]);
 
   const addTask = useCallback(
     async (text: string) => {
@@ -70,6 +93,7 @@ export function useTasks(
         return;
       }
       setLimitMessage("");
+      markLocalWrite();
       const optimistic: Task = {
         id: crypto.randomUUID(),
         user_id: userId,
@@ -95,13 +119,14 @@ export function useTasks(
         },
       });
     },
-    [activeCount, supabase, tasks, today, userId],
+    [activeCount, markLocalWrite, supabase, tasks, today, userId],
   );
 
   const addToInbox = useCallback(
     async (text: string) => {
       const trimmed = text.trim();
       if (!trimmed) return;
+      markLocalWrite();
       const optimistic: Task = {
         id: crypto.randomUUID(),
         user_id: userId,
@@ -125,7 +150,7 @@ export function useTasks(
         },
       });
     },
-    [inbox, supabase, userId],
+    [inbox, markLocalWrite, supabase, userId],
   );
 
   const moveToToday = useCallback(
@@ -137,6 +162,7 @@ export function useTasks(
       setLimitMessage("");
       const item = inbox.find((t) => t.id === id);
       if (!item) return;
+      markLocalWrite();
       const position = tasks.reduce((m, t) => Math.max(m, t.position), -1) + 1;
       setInbox((prev) => prev.filter((t) => t.id !== id));
       // Pulling an item into Today always restarts it as active — a stale
@@ -152,7 +178,7 @@ export function useTasks(
         match: { id },
       });
     },
-    [activeCount, inbox, supabase, tasks, today],
+    [activeCount, inbox, markLocalWrite, supabase, tasks, today],
   );
 
   const toggleTask = useCallback(
@@ -163,6 +189,7 @@ export function useTasks(
       // write would always persist completed:false and the UI would revert.)
       const current = tasks.find((t) => t.id === id);
       if (!current) return;
+      markLocalWrite();
       const nextCompleted = !current.completed;
       const completedAt = nextCompleted ? new Date().toISOString() : null;
       setTasks((prev) =>
@@ -178,11 +205,12 @@ export function useTasks(
         match: { id },
       });
     },
-    [supabase, tasks],
+    [markLocalWrite, supabase, tasks],
   );
 
   const deleteTask = useCallback(
     async (id: string) => {
+      markLocalWrite();
       setTasks((prev) => prev.filter((t) => t.id !== id));
       setInbox((prev) => prev.filter((t) => t.id !== id));
       setLimitMessage("");
@@ -192,7 +220,7 @@ export function useTasks(
         match: { id },
       });
     },
-    [supabase],
+    [markLocalWrite, supabase],
   );
 
   const completedCount = useMemo(() => tasks.filter((t) => t.completed).length, [tasks]);

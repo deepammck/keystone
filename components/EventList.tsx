@@ -107,7 +107,7 @@ function EventListInner({
         <p className="py-1 text-sm text-muted">Nothing on the horizon.</p>
       )}
 
-      <ul className="flex flex-col gap-2.5">
+      <ul className="flex flex-col gap-1.5">
         {events.map((ev) => {
           // The remaining time is the whole point of a deadline, so it leads:
           // pulled left, scaled up, and color-coded by how soon it lands.
@@ -165,31 +165,31 @@ function EventListInner({
           return (
             <li
               key={ev.id}
-              className="group flex items-center gap-3"
+              className="group flex items-center gap-2.5"
             >
               <span
-                className={`flex w-20 shrink-0 items-center gap-1 font-mono text-sm font-semibold tabular-nums transition-colors ${urgency}`}
+                className={`flex w-16 shrink-0 items-center gap-1 font-mono text-sm font-semibold tabular-nums transition-colors ${urgency}`}
               >
-                {urgent && <AlertTriangleIcon size={13} />}
+                {urgent && <AlertTriangleIcon size={12} />}
                 <span>{now === 0 ? "·" : formatCountdown(ev.due_at, now)}</span>
               </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate leading-tight">{ev.title}</p>
-                <p className="text-xs text-muted">{formatEventTime(ev.due_at, timezone)}</p>
-              </div>
+              <p className="min-w-0 flex-1 truncate text-sm leading-tight">{ev.title}</p>
+              <span className="shrink-0 text-xs text-muted tabular-nums">
+                {formatEventTime(ev.due_at, timezone)}
+              </span>
               <button
                 aria-label="Edit event"
                 onClick={() => startEdit(ev)}
-                className="press flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted opacity-100 transition-opacity hover:bg-tint-strong hover:text-text sm:opacity-0 sm:group-hover:opacity-100"
+                className="press flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted opacity-100 transition-opacity hover:bg-tint-strong hover:text-text sm:opacity-0 sm:group-hover:opacity-100"
               >
-                <PencilIcon size={15} />
+                <PencilIcon size={14} />
               </button>
               <button
                 aria-label="Delete event"
                 onClick={() => onDelete(ev.id)}
-                className="press flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted opacity-100 transition-opacity hover:bg-tint-strong hover:text-text sm:opacity-0 sm:group-hover:opacity-100"
+                className="press flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted opacity-100 transition-opacity hover:bg-tint-strong hover:text-text sm:opacity-0 sm:group-hover:opacity-100"
               >
-                <XIcon size={16} />
+                <XIcon size={15} />
               </button>
             </li>
           );
