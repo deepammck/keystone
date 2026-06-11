@@ -9,6 +9,7 @@ import {
   pickerValueToIso,
 } from "@/lib/utils";
 import { useNow } from "@/lib/hooks/useNow";
+import { eventsToIcs, ICS_FILENAME } from "@/lib/ics";
 import { DateTimePicker } from "@/components/DateTimePicker";
 import { AlertTriangleIcon, PencilIcon, XIcon } from "@/components/icons";
 
@@ -65,16 +66,41 @@ function EventListInner({
     setEditingId(null);
   }
 
+  // Client-side .ics download from the events already in memory — works the
+  // same in local and Supabase mode (no round trip to /api/calendar).
+  function exportIcs() {
+    const blob = new Blob([eventsToIcs(events, Date.now())], {
+      type: "text/calendar;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = ICS_FILENAME;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <section className="card rounded-2xl bg-tint px-5 py-4">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="section-title font-mono text-base font-medium uppercase tracking-[0.1em]">Deadlines</h2>
-        <button
-          onClick={() => setAdding((v) => !v)}
-          className="press rounded-full px-2 py-1 text-sm text-muted transition-colors hover:bg-tint-strong hover:text-text"
-        >
-          {adding ? "Cancel" : "+ Add"}
-        </button>
+        <div className="flex items-center gap-1">
+          {events.length > 0 && (
+            <button
+              onClick={exportIcs}
+              title="Download deadlines as an .ics calendar file"
+              className="press rounded-full px-2 py-1 text-sm text-muted transition-colors hover:bg-tint-strong hover:text-text"
+            >
+              Export
+            </button>
+          )}
+          <button
+            onClick={() => setAdding((v) => !v)}
+            className="press rounded-full px-2 py-1 text-sm text-muted transition-colors hover:bg-tint-strong hover:text-text"
+          >
+            {adding ? "Cancel" : "+ Add"}
+          </button>
+        </div>
       </div>
 
       {events.length === 0 && !adding && (
