@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { CollegeActivity } from "@/lib/types";
-import { useCollection } from "@/lib/hooks/useCollection";
+import type { Collection } from "@/lib/hooks/useCollection";
 import { LIMITS } from "@/lib/college-reference";
 import {
   AddPanel,
@@ -22,18 +22,14 @@ const emptyForm = {
   notes: "",
 };
 
+// The collection is owned by CollegeTool (so state survives tab switches);
+// this module is purely the view for it.
 export function ActivitiesModule({
-  initial,
-  userId,
+  collection,
 }: {
-  initial: CollegeActivity[];
-  userId: string;
+  collection: Collection<CollegeActivity>;
 }) {
-  const { items, add, update, remove } = useCollection<CollegeActivity>(
-    "college_activities",
-    initial,
-    userId,
-  );
+  const { items, add, update, remove } = collection;
   const [form, setForm] = useState(emptyForm);
 
   const shortlisted = items.filter((a) => a.ca_candidate).length;

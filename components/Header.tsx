@@ -47,12 +47,14 @@ export function Header({
 
   // The date is anchored to the canonical `today` (same value the rest of the
   // app keys off) so it can never drift a day apart from the Notepad; only the
-  // clock time ticks from the live wall clock.
+  // clock time ticks from the live wall clock. useNow returns 0 until its
+  // effect fires, so guard on > 0 — rendering from 0 would flash the epoch
+  // time and a bogus "% of day left" for the first frame.
   const sleeping =
-    now != null &&
+    now > 0 &&
     isSleepTime(minutesIntoDayInTz(timezone, now), wakeMinute, sleepMinute);
   const pctLeft =
-    now != null
+    now > 0
       ? wakingPercentLeft(
           minutesIntoDayInTz(timezone, now),
           wakeMinute,
@@ -67,7 +69,7 @@ export function Header({
             so the eye lands on the progress chips (and the work below) first. */}
         <h1 className="font-mono text-[13px] font-medium uppercase tracking-[0.16em] text-muted">
           {formatLongDate(today)}
-          {now != null ? ` · ${formatTime24InTz(timezone, now)}` : ""}
+          {now > 0 ? ` · ${formatTime24InTz(timezone, now)}` : ""}
         </h1>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <Chip icon={<TaskIcon />}>

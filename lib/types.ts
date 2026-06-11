@@ -17,9 +17,10 @@ export type Event = {
   created_at: string;
 };
 
-// A "thing I want to achieve" — a simple checklist item. Rendered as a
-// collapsible sub-area inside the Deadlines section (NOT a new section);
-// driven by the generic useCollection hook.
+// A "thing I want to achieve" — an always-visible aspiration. Rendered as pills
+// in the Header's GoalBanner (NOT a new section, NOT a checklist); driven by the
+// generic useCollection hook. `completed` is retained but unused (goals here are
+// read, not ticked off).
 export type Goal = {
   id: string;
   user_id: string;
@@ -188,6 +189,7 @@ export type CollegeHonor = {
   title: string;
   level: string | null;
   grade: string | null;
+  position: number;
   created_at: string;
 };
 

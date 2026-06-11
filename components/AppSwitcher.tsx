@@ -24,8 +24,15 @@ export function AppSwitcher({ userId }: { userId: string }) {
     try {
       localStorage.setItem("keystone:last-app", key);
     } catch {}
-    // Best-effort; not awaited — navigation shouldn't wait on the write.
-    void supabase.from("profiles").upsert({ id: userId, last_app: key });
+    // Best-effort and not awaited — but the builder MUST be consumed with
+    // .then() or it never executes (supabase-js builders are lazy thenables;
+    // a bare `void` call silently does nothing).
+    supabase
+      .from("profiles")
+      .upsert({ id: userId, last_app: key })
+      .then(({ error }) => {
+        if (error) console.error("Keystone: failed to save last app", error);
+      });
   }
 
   // A segmented control on a tint track (the active tool is a raised chip), with

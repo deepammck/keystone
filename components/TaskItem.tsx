@@ -15,7 +15,16 @@ function TaskItemInner({ task, onToggle, onDelete, onMoveToToday }: Props) {
   const [offset, setOffset] = useState(0);
   const [pop, setPop] = useState(false);
   const startX = useRef<number | null>(null);
+  const startY = useRef<number | null>(null);
+  // A gesture stays ambiguous until it moves enough to be clearly horizontal;
+  // only then do we capture the pointer and treat it as a delete-swipe. Until
+  // then vertical movement scrolls the page normally.
+  const swiping = useRef(false);
   const [prevCompleted, setPrevCompleted] = useState(task.completed);
+  // An inbox row (it carries a "move to today" action) is backlog, not a thing
+  // ticked off in place — so it shows no completion checkbox; pulling it into
+  // Today is what activates it.
+  const isInbox = Boolean(onMoveToToday);
 
   // Detect the incomplete→complete transition *during render* so the `strike`
   // and `strike-draw` classes land in the SAME commit. Doing this in an effect
@@ -38,51 +47,87 @@ function TaskItemInner({ task, onToggle, onDelete, onMoveToToday }: Props) {
   function onPointerDown(e: React.PointerEvent) {
     if (e.pointerType === "mouse") return; // swipe is touch/pen only
     startX.current = e.clientX;
+    startY.current = e.clientY;
+    swiping.current = false;
   }
   function onPointerMove(e: React.PointerEvent) {
-    if (startX.current == null) return;
+    if (startX.current == null || startY.current == null) return;
     const dx = e.clientX - startX.current;
+    const dy = e.clientY - startY.current;
+    // Decide direction once: a mostly-vertical drag is a scroll — bail and let
+    // the browser handle it. A mostly-horizontal leftward drag is a swipe;
+    // capture the pointer so subsequent moves don't get stolen by scrolling.
+    if (!swiping.current) {
+      if (Math.abs(dy) > Math.abs(dx)) {
+        startX.current = null;
+        return;
+      }
+      if (dx < -6) {
+        swiping.current = true;
+        try {
+          (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+        } catch {}
+      } else {
+        return;
+      }
+    }
     if (dx < 0) setOffset(Math.max(dx, -96));
   }
   function onPointerUp() {
     if (offset <= -64) onDelete(task.id);
     setOffset(0);
     startX.current = null;
+    startY.current = null;
+    swiping.current = false;
   }
 
+  // li pl-1/-ml-1: overflow-hidden (needed for swipe-to-delete) clips at the
+  // padding box, so the padding gives the check-pop bounce (scale 1.28 ≈ 3.5px
+  // overhang) room on the left while the negative margin keeps the checkbox
+  // visually aligned.
   return (
     <li className="group relative -ml-1 overflow-hidden pl-1">
-      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-sm text-red-700">
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-sm text-danger">
         Delete
       </div>
       <div
-        className="flex min-h-11 items-center gap-3 bg-bg py-1 transition-transform"
+        className="flex min-h-11 items-center gap-3 bg-bg py-1 transition-transform [touch-action:pan-y]"
         style={{ transform: `translateX(${offset}px)` }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        <button
-          aria-label={task.completed ? "Mark incomplete" : "Mark complete"}
-          onClick={() => onToggle(task.id)}
-          className={`press flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-[transform,background-color,box-shadow] duration-150 ${
-            task.completed
-              ? "scale-105 bg-accent text-on-accent [box-shadow:var(--neu-raised-sm)]"
-              : "bg-tint text-transparent [box-shadow:var(--neu-inset)]"
-          } ${pop ? "check-pop" : ""}`}
-        >
-          {task.completed && (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-              <path className="check-path" d="M5 13l4 4L19 7" />
-            </svg>
-          )}
-        </button>
+        {isInbox ? (
+          // Inbox bullet — a static marker, not a toggle.
+          <span
+            aria-hidden
+            className="h-6 w-6 shrink-0 grid place-items-center text-muted"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-current" />
+          </span>
+        ) : (
+          <button
+            aria-label={task.completed ? "Mark incomplete" : "Mark complete"}
+            onClick={() => onToggle(task.id)}
+            className={`press flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-[transform,background-color,box-shadow] duration-150 ${
+              task.completed
+                ? "scale-105 bg-accent text-on-accent [box-shadow:var(--neu-raised-sm)]"
+                : "bg-tint text-transparent [box-shadow:var(--neu-inset)]"
+            } ${pop ? "check-pop" : ""}`}
+          >
+            {task.completed && (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                <path className="check-path" d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </button>
+        )}
 
         <span className="min-w-0 flex-1 break-words leading-tight">
           <span
             className={`inline transition-opacity ${
-              task.completed ? "strike text-muted opacity-50" : ""
+              task.completed && !isInbox ? "strike text-muted opacity-50" : ""
             } ${pop ? "strike-draw" : ""}`}
           >
             {task.text}

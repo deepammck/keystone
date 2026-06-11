@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { CollegeHonor } from "@/lib/types";
-import { useCollection } from "@/lib/hooks/useCollection";
+import type { Collection } from "@/lib/hooks/useCollection";
 import { HONOR_LEVELS, GRADE_LEVELS_WITH_PG, LIMITS } from "@/lib/college-reference";
 import {
   AddPanel,
@@ -40,24 +40,20 @@ const LEVEL_TONE: Record<string, string> = {
 };
 
 export function HonorsModule({
-  initial,
-  userId,
+  collection,
 }: {
-  initial: CollegeHonor[];
-  userId: string;
+  collection: Collection<CollegeHonor>;
 }) {
-  const { items, add, update, remove } = useCollection<CollegeHonor>(
-    "college_honors",
-    initial,
-    userId,
-  );
+  const { items, add, update, remove } = collection;
   const [form, setForm] = useState(emptyForm);
 
   // Lead with impact: most-prestigious level first, then the user's own order
-  // (created_at, which the up/down controls swap).
+  // (`position`, which the up/down controls swap), falling back to created_at.
   const ordered = [...items].sort((a, b) => {
     const r = (LEVEL_RANK[b.level ?? ""] ?? -1) - (LEVEL_RANK[a.level ?? ""] ?? -1);
-    return r !== 0 ? r : a.created_at.localeCompare(b.created_at);
+    if (r !== 0) return r;
+    if (a.position !== b.position) return a.position - b.position;
+    return a.created_at.localeCompare(b.created_at);
   });
 
   const atCap = items.length >= LIMITS.honors;
@@ -68,19 +64,22 @@ export function HonorsModule({
       title: form.title.trim(),
       level: form.level,
       grade: form.grade,
+      // Append below existing honors; ordering is by `position` within a level.
+      position: items.reduce((m, h) => Math.max(m, h.position), -1) + 1,
     });
     setForm(emptyForm);
     close();
   }
 
-  // Reorder within the same level by swapping the created_at sort key with the
-  // neighbour. No schema change — created_at is already what the list sorts by.
+  // Reorder within the same level by swapping the `position` sort key with the
+  // neighbour — atomic per row (a racing refetch can't half-apply it the way
+  // the old created_at swap could), and created_at keeps its real meaning.
   function move(index: number, dir: -1 | 1) {
     const a = ordered[index];
     const b = ordered[index + dir];
     if (!a || !b || a.level !== b.level) return;
-    update(a.id, { created_at: b.created_at });
-    update(b.id, { created_at: a.created_at });
+    update(a.id, { position: b.position });
+    update(b.id, { position: a.position });
   }
 
   return (
@@ -138,7 +137,7 @@ export function HonorsModule({
                         aria-label="Move up"
                         disabled={!prevSameLevel}
                         onClick={() => move(i, -1)}
-                        className="press text-2xs leading-none text-muted hover:text-text disabled:opacity-20"
+                        className="press grid h-6 w-8 place-items-center rounded text-xs leading-none text-muted hover:bg-bg hover:text-text disabled:opacity-20"
                       >
                         ▲
                       </button>
@@ -147,7 +146,7 @@ export function HonorsModule({
                         aria-label="Move down"
                         disabled={!nextSameLevel}
                         onClick={() => move(i, 1)}
-                        className="press text-2xs leading-none text-muted hover:text-text disabled:opacity-20"
+                        className="press grid h-6 w-8 place-items-center rounded text-xs leading-none text-muted hover:bg-bg hover:text-text disabled:opacity-20"
                       >
                         ▼
                       </button>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { CollegeSchool } from "@/lib/types";
-import { useCollection } from "@/lib/hooks/useCollection";
+import type { Collection } from "@/lib/hooks/useCollection";
 import { SCHOOL_TAGS } from "@/lib/college-reference";
 import {
   AddPanel,
@@ -30,17 +30,11 @@ const emptyForm = {
 };
 
 export function SchoolsModule({
-  initial,
-  userId,
+  collection,
 }: {
-  initial: CollegeSchool[];
-  userId: string;
+  collection: Collection<CollegeSchool>;
 }) {
-  const { items, add, remove } = useCollection<CollegeSchool>(
-    "college_schools",
-    initial,
-    userId,
-  );
+  const { items, add, remove } = collection;
   const [form, setForm] = useState(emptyForm);
 
   const counts = SCHOOL_TAGS.map((t) => ({

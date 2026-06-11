@@ -22,7 +22,7 @@
 
 ## 2) Authority & Links
 - Build plan: `/Users/dmk-admin/.claude/plans/keystone-single-page-splendid-ocean.md`
-- DB schema + RLS: `supabase/migrations/001_initial.sql`, `002_daily_notes.sql` (daily_notes replaces weekly_reflections), `003_inbox_and_events.sql` (nullable `tasks.date` for inbox + `events` table for deadlines), `004_waking_hours.sql` (`profiles.wake_minute`/`sleep_minute`), `005_focus_goal.sql` (`profiles.focus_goal_minutes`), `006_profile_theme.sql` (`profiles.theme`), `007_links.sql` (`links` table for the Link Dump tool + `profiles.last_app`), `008_college.sql` (9 College Tracker tables), `009_goals.sql` (`goals` table for the Goals checklist)
+- DB schema + RLS: `supabase/migrations/001_initial.sql`, `002_daily_notes.sql` (daily_notes replaces weekly_reflections), `003_inbox_and_events.sql` (nullable `tasks.date` for inbox + `events` table for deadlines), `004_waking_hours.sql` (`profiles.wake_minute`/`sleep_minute`), `005_focus_goal.sql` (`profiles.focus_goal_minutes`), `006_profile_theme.sql` (`profiles.theme`), `007_links.sql` (`links` table for the Link Dump tool + `profiles.last_app`), `008_college.sql` (9 College Tracker tables), `009_goals.sql` (`goals` table for the Goals checklist), `010_honors_position.sql` (`college_honors.position` for in-level reordering — swap `position`, not `created_at`)
 - Auth/SSR clients: `lib/supabase/`
 - Shared types: `lib/types.ts`
 - Links tool: `links` table + `useLinks` hook + `components/LinksTool.tsx` (+ `components/links/*`); server metadata fetcher at `app/api/fetch-metadata/route.ts` (uses `node-html-parser`). Route `app/links/page.tsx` (SSR in Supabase mode, `components/LocalLinks.tsx` in local mode). Mirrors `useEvents`/`runOrQueue`/local-client conventions.

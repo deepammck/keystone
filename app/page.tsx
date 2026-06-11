@@ -5,8 +5,15 @@ import { isLocalMode } from "@/lib/local-mode";
 // The product triad, telegraphed as pills so the structure reads at a glance.
 const PILLARS = ["Tasks", "Focus", "Habits"];
 
-export default function Landing() {
+export default async function Landing({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
   const local = isLocalMode();
+  // The auth callback redirects here with ?error=auth when a magic-link
+  // exchange fails — surface it instead of dropping the user on a silent form.
+  const { error } = await searchParams;
   return (
     <main className="min-h-dvh flex flex-col items-center justify-start px-6 pt-[16vh] pb-16">
       <div className="reveal w-full max-w-md rounded-3xl border border-border bg-tint px-8 py-12 text-center shadow-[0_30px_80px_-40px_var(--shadow)]">
@@ -66,7 +73,18 @@ export default function Landing() {
               </div>
             </div>
           ) : (
-            <SignInForm />
+            <>
+              {error === "auth" && (
+                <p
+                  role="alert"
+                  className="mb-3 rounded-lg bg-danger/10 px-3 py-2 text-xs text-danger"
+                >
+                  That sign-in link didn’t work — it may have expired. Request a
+                  new one below.
+                </p>
+              )}
+              <SignInForm />
+            </>
           )}
         </div>
       </div>

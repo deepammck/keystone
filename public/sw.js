@@ -1,7 +1,7 @@
 // Keystone service worker — app-shell caching + offline fallback.
 // Hand-written (no build step) so it stays bundler-agnostic on Next 16.
 
-const CACHE = "keystone-v1";
+const CACHE = "keystone-v2";
 const OFFLINE_URL = "/~offline";
 const PRECACHE = ["/~offline", "/manifest.json", "/icon-192.png", "/icon-512.png"];
 
@@ -34,6 +34,10 @@ self.addEventListener("fetch", (event) => {
 
   // Don't cache cross-origin requests (e.g. the Supabase REST/Realtime API).
   if (url.origin !== self.location.origin) return;
+
+  // Never cache API routes (e.g. /api/fetch-metadata) — they're dynamic,
+  // per-request, and must always hit the network.
+  if (url.pathname.startsWith("/api/")) return;
 
   // Page navigations: network-first, fall back to the offline page.
   if (request.mode === "navigate") {

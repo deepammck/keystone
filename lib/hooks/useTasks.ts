@@ -31,16 +31,17 @@ export function useTasks(
   const todayTasks = useMemo(() => sortTasks(tasks), [tasks]);
   const activeCount = useMemo(() => tasks.filter((t) => !t.completed).length, [tasks]);
 
+  // Two scoped queries instead of `select *` on the whole table: completed
+  // tasks accumulate on past dates forever (the silent archive), so an
+  // unfiltered fetch would re-download the entire history on every realtime
+  // event.
   const refetch = useCallback(async () => {
-    const { data } = await supabase
-      .from("tasks")
-      .select("*")
-      .eq("user_id", userId);
-    if (data) {
-      const all = data as Task[];
-      setTasks(all.filter((t) => t.date === today));
-      setInbox(all.filter((t) => t.date == null));
-    }
+    const [todayRes, inboxRes] = await Promise.all([
+      supabase.from("tasks").select("*").eq("user_id", userId).eq("date", today),
+      supabase.from("tasks").select("*").eq("user_id", userId).is("date", null),
+    ]);
+    if (todayRes.data) setTasks(todayRes.data as Task[]);
+    if (inboxRes.data) setInbox(inboxRes.data as Task[]);
   }, [supabase, userId, today]);
 
   const refetchRef = useRef(refetch);
@@ -76,7 +77,9 @@ export function useTasks(
         completed: false,
         completed_at: null,
         date: today,
-        position: tasks.length,
+        // max+1 (not length): after deletions, length collides with surviving
+        // positions and ordering would fall back to created_at tie-breaks.
+        position: tasks.reduce((m, t) => Math.max(m, t.position), -1) + 1,
         created_at: new Date().toISOString(),
       };
       setTasks((prev) => [...prev, optimistic]);
@@ -92,7 +95,7 @@ export function useTasks(
         },
       });
     },
-    [activeCount, supabase, tasks.length, today, userId],
+    [activeCount, supabase, tasks, today, userId],
   );
 
   const addToInbox = useCallback(
@@ -106,7 +109,7 @@ export function useTasks(
         completed: false,
         completed_at: null,
         date: null,
-        position: inbox.length,
+        position: inbox.reduce((m, t) => Math.max(m, t.position), -1) + 1,
         created_at: new Date().toISOString(),
       };
       setInbox((prev) => [...prev, optimistic]);
@@ -122,7 +125,7 @@ export function useTasks(
         },
       });
     },
-    [inbox.length, supabase, userId],
+    [inbox, supabase, userId],
   );
 
   const moveToToday = useCallback(
@@ -134,16 +137,22 @@ export function useTasks(
       setLimitMessage("");
       const item = inbox.find((t) => t.id === id);
       if (!item) return;
+      const position = tasks.reduce((m, t) => Math.max(m, t.position), -1) + 1;
       setInbox((prev) => prev.filter((t) => t.id !== id));
-      setTasks((prev) => [...prev, { ...item, date: today, position: prev.length }]);
+      // Pulling an item into Today always restarts it as active — a stale
+      // completed flag from its inbox life would otherwise arrive pre-struck.
+      setTasks((prev) => [
+        ...prev,
+        { ...item, date: today, position, completed: false, completed_at: null },
+      ]);
       await runOrQueue(supabase, {
         table: "tasks",
         op: "update",
-        payload: { date: today },
+        payload: { date: today, position, completed: false, completed_at: null },
         match: { id },
       });
     },
-    [activeCount, inbox, supabase, today],
+    [activeCount, inbox, supabase, tasks, today],
   );
 
   const toggleTask = useCallback(

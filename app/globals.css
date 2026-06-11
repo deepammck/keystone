@@ -11,9 +11,14 @@
   --accent-soft: #d8d3cb;
   --on-accent: #1c1b19;
   --muted: #bdb7ad;
-  --tint: #1c1b19;
-  --tint-strong: #232220;
-  --border: rgba(255, 255, 255, 0.05);
+  /* Card fill is lifted ABOVE the page (not equal to --bg) so soft-UI slabs
+     actually separate in dark mode — a dark-on-dark drop shadow has almost no
+     room to read on near-black, so the depth must also come from fill. This is
+     a lighter fill, NOT a white highlight rim (the aesthetic forbids the rim).
+     Inputs/rows on --bg then sit visibly recessed inside the lighter cards. */
+  --tint: #242220;
+  --tint-strong: #2c2a27;
+  --border: rgba(255, 255, 255, 0.06);
   --shadow: rgba(0, 0, 0, 0.7);
   /* Soft-shadow tone for this surface (dark only — no white highlight). */
   --neu-dark: rgba(0, 0, 0, 0.6);
@@ -66,7 +71,9 @@
   --color-ring: var(--accent-soft);
   --color-danger: #ef4444; /* = Tailwind red-500 */
   --color-warning: #f59e0b; /* = Tailwind amber-500 */
-  --text-2xs: 10px;
+  /* Floor for incidental labels — 11px keeps the smallest tier legible (10px
+     heatmap/legend/badge text was the worst mobile-legibility offender). */
+  --text-2xs: 11px;
   --font-sans: var(--font-dm-sans);
   --font-mono: var(--font-dm-mono), ui-monospace, "SF Mono", "Menlo", monospace;
 }
@@ -92,6 +99,28 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   accent-color: var(--accent);
+}
+
+/* Visible keyboard focus on every interactive control. Inputs already carry a
+   Tailwind focus:ring; this covers the icon/action buttons (the many `.press`
+   elements — transport, tabs, delete/edit, gear, arrows) that previously only
+   styled :hover, leaving keyboard/switch users with no position indicator.
+   :focus-visible (not :focus) so a mouse click never shows the ring. */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Tailwind v4's preflight leaves buttons on the default arrow cursor; restore
+   the pointer so every clickable control (stat tiles, tag chips, tabs) signals
+   interactivity. Disabled controls keep the default cursor. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
 }
 
 /* Native time/select controls inherit the monochrome theme: the OS picker

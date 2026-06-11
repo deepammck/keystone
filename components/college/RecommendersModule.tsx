@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { CollegeRecommender } from "@/lib/types";
-import { useCollection } from "@/lib/hooks/useCollection";
+import type { Collection } from "@/lib/hooks/useCollection";
 import { RECOMMENDER_STATUSES } from "@/lib/college-reference";
 import {
   AddPanel,
@@ -35,17 +35,11 @@ const emptyForm = {
 };
 
 export function RecommendersModule({
-  initial,
-  userId,
+  collection,
 }: {
-  initial: CollegeRecommender[];
-  userId: string;
+  collection: Collection<CollegeRecommender>;
 }) {
-  const { items, add, update, remove } = useCollection<CollegeRecommender>(
-    "college_recommenders",
-    initial,
-    userId,
-  );
+  const { items, add, update, remove } = collection;
   const [form, setForm] = useState(emptyForm);
 
   async function submit(close: () => void) {

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { CollegeTest } from "@/lib/types";
-import { useCollection } from "@/lib/hooks/useCollection";
+import type { Collection } from "@/lib/hooks/useCollection";
 import { useNow } from "@/lib/hooks/useNow";
 import { TEST_KINDS, TEST_STATUSES } from "@/lib/college-reference";
 import {
@@ -81,17 +81,11 @@ const emptyForm = {
 };
 
 export function TestingModule({
-  initial,
-  userId,
+  collection,
 }: {
-  initial: CollegeTest[];
-  userId: string;
+  collection: Collection<CollegeTest>;
 }) {
-  const { items, add, remove } = useCollection<CollegeTest>(
-    "college_tests",
-    initial,
-    userId,
-  );
+  const { items, add, update, remove } = collection;
   const [form, setForm] = useState(emptyForm);
   const now = useNow(60000);
 
@@ -166,7 +160,7 @@ export function TestingModule({
                   ))}
                 </div>
               )}
-              <p className="mt-2 text-[11px] leading-snug text-muted/80">
+              <p className="mt-2 text-[11px] leading-snug text-muted">
                 Best section scores across all sittings, combined.
               </p>
             </Card>
@@ -266,41 +260,17 @@ export function TestingModule({
         <Card>
           <div className="mb-2 text-sm font-semibold">Planned</div>
           <ul className="flex flex-col gap-1.5">
-            {upcoming.map((t) => {
-              // Planned sittings behave like deadlines — lead with a countdown.
-              const days = t.test_date ? daysUntil(t.test_date, now) : null;
-              return (
-                <li
-                  key={t.id}
-                  className="flex items-center justify-between gap-2 text-sm"
-                >
-                  <span className="flex flex-wrap items-center gap-2">
-                    {days != null && (
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${
-                          days <= 14
-                            ? "bg-warning/15 text-warning"
-                            : "bg-bg text-accent-soft"
-                        }`}
-                      >
-                        {countdownLabel(days)}
-                      </span>
-                    )}
-                    <span>
-                      {t.kind}
-                      {t.label ? ` · ${t.label}` : ""}
-                    </span>
-                    {t.test_date && (
-                      <span className="text-xs text-muted">{t.test_date}</span>
-                    )}
-                    {t.goal != null && (
-                      <span className="text-xs text-muted">goal {t.goal}</span>
-                    )}
-                  </span>
-                  <DeleteButton onClick={() => remove(t.id)} />
-                </li>
-              );
-            })}
+            {upcoming.map((t) => (
+              <PlannedTestRow
+                key={t.id}
+                test={t}
+                now={now}
+                onRecord={(patch) =>
+                  update(t.id, { ...patch, status: "taken" })
+                }
+                onDelete={() => remove(t.id)}
+              />
+            ))}
           </ul>
         </Card>
       )}
@@ -359,5 +329,117 @@ export function TestingModule({
 
       {items.length === 0 && <Empty>No tests yet — plan your first sitting.</Empty>}
     </div>
+  );
+}
+
+// A planned sitting records its result in place (capturing score + subscores)
+// rather than forcing a delete-and-re-add that would lose the date and goal.
+function PlannedTestRow({
+  test: t,
+  now,
+  onRecord,
+  onDelete,
+}: {
+  test: CollegeTest;
+  now: number;
+  onRecord: (patch: Partial<CollegeTest>) => void;
+  onDelete: () => void;
+}) {
+  const [recording, setRecording] = useState(false);
+  const [score, setScore] = useState("");
+  const [subs, setSubs] = useState<Record<string, string>>({});
+  const sections = SECTIONS[t.kind] ?? [];
+  // Planned sittings behave like deadlines — lead with a countdown.
+  const days = t.test_date ? daysUntil(t.test_date, now) : null;
+
+  function save() {
+    const subscores: Record<string, number> = {};
+    for (const [k, v] of Object.entries(subs)) if (v) subscores[k] = Number(v);
+    onRecord({
+      score: score ? Number(score) : null,
+      subscores,
+    });
+  }
+
+  return (
+    <li className="flex flex-col gap-1.5 text-sm">
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex flex-wrap items-center gap-2">
+          {days != null && (
+            <span
+              className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${
+                days <= 14
+                  ? "bg-warning/15 text-warning"
+                  : "bg-bg text-accent-soft"
+              }`}
+            >
+              {countdownLabel(days)}
+            </span>
+          )}
+          <span>
+            {t.kind}
+            {t.label ? ` · ${t.label}` : ""}
+          </span>
+          {t.test_date && (
+            <span className="text-xs text-muted">{t.test_date}</span>
+          )}
+          {t.goal != null && (
+            <span className="text-xs text-muted">goal {t.goal}</span>
+          )}
+        </span>
+        <span className="flex shrink-0 items-center gap-1.5">
+          {!recording && (
+            <button
+              type="button"
+              onClick={() => setRecording(true)}
+              className="press rounded-md border border-border px-2 py-1 text-xs font-medium hover:bg-bg"
+            >
+              Record result
+            </button>
+          )}
+          <DeleteButton onClick={onDelete} />
+        </span>
+      </div>
+
+      {recording && (
+        <div className="flex flex-wrap items-end gap-2 rounded-lg bg-bg p-2">
+          <Field label="Score">
+            <Input
+              type="number"
+              value={score}
+              onChange={(e) => setScore(e.target.value)}
+              autoFocus
+            />
+          </Field>
+          {sections.map((sec) => (
+            <Field key={sec} label={sec}>
+              <Input
+                type="number"
+                value={subs[sec] ?? ""}
+                onChange={(e) =>
+                  setSubs({ ...subs, [sec]: e.target.value })
+                }
+              />
+            </Field>
+          ))}
+          <div className="flex gap-1.5">
+            <button
+              type="button"
+              onClick={save}
+              className="press rounded-md bg-accent px-2.5 py-1.5 text-xs font-medium text-on-accent"
+            >
+              Save result
+            </button>
+            <button
+              type="button"
+              onClick={() => setRecording(false)}
+              className="press px-1.5 py-1 text-xs text-muted hover:text-text"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </li>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Event, Goal, Habit, Task } from "@/lib/types";
+import { todayInTz } from "@/lib/utils";
 import { useTasks } from "@/lib/hooks/useTasks";
 import { useTimer } from "@/lib/hooks/useTimer";
 import { useHabits } from "@/lib/hooks/useHabits";
@@ -19,6 +20,7 @@ import { EventList } from "@/components/EventList";
 import { WeekHistory } from "@/components/WeekHistory";
 import { Heatmap } from "@/components/Heatmap";
 import { SettingsModal } from "@/components/SettingsModal";
+import { ThemeSync } from "@/components/ThemeSync";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { CelebrationToast } from "@/components/CelebrationToast";
 import { useCelebrations } from "@/lib/hooks/useCelebrations";
@@ -51,16 +53,15 @@ export function Dashboard(props: Props) {
   const online = useOnline();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  // The profile theme is the source of truth. The inline <head> script paints
-  // from the localStorage cache for an instant, flash-free load; here we
-  // reconcile to the DB value so the theme survives a wiped/evicted cache (the
-  // "reverts to dark on reload" bug) and follows the account across devices.
+  // `today` is frozen at page load; a tab left open past midnight would keep
+  // writing tasks/habits/notes to yesterday. Watch the wall clock and reload
+  // when the (profile-tz) date rolls — the reload re-runs SSR + useRollover.
   useEffect(() => {
-    document.documentElement.dataset.theme = props.theme;
-    try {
-      localStorage.setItem("keystone:theme", props.theme);
-    } catch {}
-  }, [props.theme]);
+    const id = setInterval(() => {
+      if (todayInTz(props.timezone) !== props.today) window.location.reload();
+    }, 60_000);
+    return () => clearInterval(id);
+  }, [props.timezone, props.today]);
 
   const tasks = useTasks(
     props.initialTasks,
@@ -123,8 +124,21 @@ export function Dashboard(props: Props) {
     props.initialDoneHabitIds.length +
     habits.doneCount;
 
+  // Stable references so the memo()d WeekHistory actually skips re-renders —
+  // an inline filter/arrow here would hand it fresh props every time.
+  const todayCompletedTasks = useMemo(
+    () => tasks.tasks.filter((t) => t.completed),
+    [tasks.tasks],
+  );
+  const { adjustToday } = timer;
+  const handleTodaySessionDeleted = useCallback(
+    (seconds: number) => adjustToday(-seconds),
+    [adjustToday],
+  );
+
   return (
     <>
+      <ThemeSync theme={props.theme} />
       <AppSwitcher userId={props.userId} />
       <main className="relative z-10 mx-auto flex max-w-[1080px] flex-col gap-3 px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 lg:grid lg:max-w-[1240px] lg:grid-cols-2 lg:gap-x-5 lg:gap-y-3 lg:items-start xl:max-w-[1400px]">
       <div className="reveal lg:col-span-2">
@@ -228,11 +242,11 @@ export function Dashboard(props: Props) {
             weekDates={props.weekDates}
             weekFocusByDate={liveWeekFocusByDate}
             completedTaskDates={liveCompletedTaskDates}
-            todayCompletedTasks={tasks.tasks.filter((t) => t.completed)}
+            todayCompletedTasks={todayCompletedTasks}
             todayCompletedCount={tasks.completedCount}
             weekHabitsDone={liveWeekHabitsDone}
             totalHabitsPerWeek={props.habits.length * 7}
-            onTodaySessionDeleted={(seconds) => timer.adjustToday(-seconds)}
+            onTodaySessionDeleted={handleTodaySessionDeleted}
           />
         </div>
       </div>

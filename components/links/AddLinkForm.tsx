@@ -96,7 +96,7 @@ export function AddLinkForm({ onAdd }: Props) {
         onChange={update("tags")}
         disabled={submitting}
         aria-label="Tags"
-        className="min-h-11 w-full rounded-lg bg-bg px-4 text-sm outline-none focus:ring-2 focus:ring-ring"
+        className="min-h-11 w-full rounded-lg bg-bg px-4 text-base outline-none focus:ring-2 focus:ring-ring sm:text-sm"
       />
       {error && (
         <p role="alert" className="text-sm text-danger">

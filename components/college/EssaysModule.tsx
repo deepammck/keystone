@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   EssayDraft,
   EssayPrompt,
   EssayStory,
   CollegeSchool,
 } from "@/lib/types";
-import { useCollection } from "@/lib/hooks/useCollection";
+import type { Collection } from "@/lib/hooks/useCollection";
 import {
   PERSONAL_STATEMENT_PROMPTS,
   ESSAY_PROMPT_SCOPES,
@@ -44,21 +44,16 @@ type PromptOption = {
 const SUBTABS = ["Prompts", "Stories", "Drafts", "Reuse"] as const;
 
 export function EssaysModule({
-  initialPrompts,
-  initialStories,
-  initialDrafts,
+  prompts,
+  stories,
+  drafts,
   schools,
-  userId,
 }: {
-  initialPrompts: EssayPrompt[];
-  initialStories: EssayStory[];
-  initialDrafts: EssayDraft[];
+  prompts: Collection<EssayPrompt>;
+  stories: Collection<EssayStory>;
+  drafts: Collection<EssayDraft>;
   schools: CollegeSchool[];
-  userId: string;
 }) {
-  const prompts = useCollection<EssayPrompt>("essay_prompts", initialPrompts, userId);
-  const stories = useCollection<EssayStory>("essay_stories", initialStories, userId);
-  const drafts = useCollection<EssayDraft>("essay_drafts", initialDrafts, userId);
   const [sub, setSub] = useState<(typeof SUBTABS)[number]>("Prompts");
 
   // Persist the last-used inner view so returning to Essays lands where you
@@ -168,7 +163,7 @@ function PromptsView({
   schools,
   schoolName,
 }: {
-  prompts: ReturnType<typeof useCollection<EssayPrompt>>;
+  prompts: Collection<EssayPrompt>;
   stories: EssayStory[];
   drafts: EssayDraft[];
   schools: CollegeSchool[];
@@ -329,7 +324,7 @@ function StoriesView({
   stories,
   promptOptions,
 }: {
-  stories: ReturnType<typeof useCollection<EssayStory>>;
+  stories: Collection<EssayStory>;
   promptOptions: PromptOption[];
 }) {
   const [form, setForm] = useState({ title: "", body: "", tags: "" });
@@ -485,7 +480,7 @@ function DraftsView({
   schools,
   schoolName,
 }: {
-  drafts: ReturnType<typeof useCollection<EssayDraft>>;
+  drafts: Collection<EssayDraft>;
   promptOptions: PromptOption[];
   promptById: (id: string | null | undefined) => PromptOption | undefined;
   schools: CollegeSchool[];
@@ -595,18 +590,25 @@ function DraftsView({
               promptLabel={promptById(latest.prompt_ref)?.label ?? "—"}
               school={schoolName(latest.school_id)}
               onUpdate={(patch) => drafts.update(latest.id, patch)}
-              onNewVersion={() =>
+              onNewVersion={(body) =>
                 drafts.add({
                   prompt_ref: latest.prompt_ref,
                   school_id: latest.school_id,
                   title: latest.title,
-                  body: latest.body,
+                  // Snapshot the live editor body, not the last-persisted one,
+                  // so a new version captures unsaved edits.
+                  body,
                   status: latest.status,
                   group_id: latest.group_id,
                   version: latest.version + 1,
                 })
               }
-              onDelete={() => drafts.remove(latest.id)}
+              onSave={(body) => drafts.update(latest.id, { body })}
+              onDelete={() =>
+                // Delete the whole version group, not just the latest — removing
+                // one version otherwise silently resurfaces the prior one.
+                versions.forEach((v) => drafts.remove(v.id))
+              }
             />
           ))}
         </div>
@@ -624,6 +626,7 @@ function DraftCard({
   school,
   onUpdate,
   onNewVersion,
+  onSave,
   onDelete,
 }: {
   draft: EssayDraft;
@@ -633,12 +636,35 @@ function DraftCard({
   promptLabel: string;
   school: string | null;
   onUpdate: (patch: Partial<EssayDraft>) => void;
-  onNewVersion: () => void;
+  onNewVersion: (body: string) => void;
+  onSave: (body: string) => void;
   onDelete: () => void;
 }) {
   const [body, setBody] = useState(draft.body ?? "");
   const [showHistory, setShowHistory] = useState(false);
   const words = wordCount(body);
+
+  // Persist unsaved edits if the card unmounts (tab switch, navigation) before
+  // the textarea blurs — otherwise in-progress writing is silently lost. Refs
+  // are synced in effects (not during render) and only read in the unmount
+  // cleanup, so the latest body is flushed exactly once on teardown.
+  const bodyRef = useRef(body);
+  const savedRef = useRef(draft.body ?? "");
+  const onSaveRef = useRef(onSave);
+  useEffect(() => {
+    bodyRef.current = body;
+  }, [body]);
+  useEffect(() => {
+    savedRef.current = draft.body ?? "";
+  }, [draft.body]);
+  useEffect(() => {
+    onSaveRef.current = onSave;
+  }, [onSave]);
+  useEffect(() => {
+    return () => {
+      if (bodyRef.current !== savedRef.current) onSaveRef.current(bodyRef.current);
+    };
+  }, []);
 
   return (
     <Card>
@@ -669,14 +695,14 @@ function DraftCard({
         rows={6}
         value={body}
         onChange={(e) => setBody(e.target.value)}
-        onBlur={() => body !== (draft.body ?? "") && onUpdate({ body })}
+        onBlur={() => body !== (draft.body ?? "") && onSave(body)}
         placeholder="Write here…"
-        className="mx-auto mt-3 w-full max-w-prose resize-y rounded-lg bg-bg px-4 py-3 text-sm leading-7 outline-none focus:ring-2 focus:ring-ring"
+        className="mx-auto mt-3 w-full max-w-prose resize-y rounded-lg bg-bg px-4 py-3 text-base leading-7 outline-none focus:ring-2 focus:ring-ring sm:text-sm"
       />
       <div className="mt-1.5 flex items-center justify-between gap-3 text-xs">
         <button
           type="button"
-          onClick={onNewVersion}
+          onClick={() => onNewVersion(body)}
           className="press text-muted underline-offset-2 hover:underline"
         >
           Save as new version

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { CollegeCourse } from "@/lib/types";
-import { useCollection } from "@/lib/hooks/useCollection";
+import type { Collection } from "@/lib/hooks/useCollection";
 import {
   COURSE_RIGOR,
   COURSE_TERMS,
@@ -42,17 +42,11 @@ const RIGOR_TONE: Record<string, string> = {
 };
 
 export function AcademicsModule({
-  initial,
-  userId,
+  collection,
 }: {
-  initial: CollegeCourse[];
-  userId: string;
+  collection: Collection<CollegeCourse>;
 }) {
-  const { items, add, update, remove } = useCollection<CollegeCourse>(
-    "college_courses",
-    initial,
-    userId,
-  );
+  const { items, add, update, remove } = collection;
   const [form, setForm] = useState(emptyForm);
 
   // GPA from completed (non-planned, graded) courses only.
@@ -263,7 +257,7 @@ function PlannedCourseRow({
     <li className="flex items-center justify-between gap-2 text-sm">
       <span className="min-w-0 truncate text-muted">
         {c.name}
-        <span className="text-muted/70"> · grade {c.grade_level}</span>
+        <span> · grade {c.grade_level}</span>
       </span>
       <span className="flex shrink-0 items-center gap-2">
         <span

@@ -146,9 +146,31 @@ export function formatCountdown(dueIso: string, nowMs: number): string {
   return `${mins}m`;
 }
 
-// Display label for a deadline moment, e.g. "Wed, May 28 · 3:00 PM".
-export function formatEventTime(dueIso: string): string {
-  return format(parseISO(dueIso), "EEE, MMM d · h:mm a");
+// Display label for a deadline moment in the user's tz, e.g.
+// "Wed, May 28 · 3:00 PM".
+export function formatEventTime(dueIso: string, timezone: string): string {
+  return format(new TZDate(parseISO(dueIso).getTime(), timezone), "EEE, MMM d · h:mm a");
+}
+
+// Display label for a picker wall-clock value ("yyyy-MM-ddTHH:mm"). The value
+// has no zone — it's already the wall clock the user picked — so no conversion.
+export function formatPickerValue(value: string): string {
+  return format(parseISO(value), "EEE, MMM d · h:mm a");
+}
+
+// Picker wall-clock value -> UTC ISO instant, interpreting the wall clock in
+// the user's profile timezone (NOT the device's), so a deadline entered as
+// "3:00 PM" means 3 PM in the same tz the rest of the app keys off.
+export function pickerValueToIso(value: string, timezone: string): string {
+  const [d, t] = value.split("T");
+  const [y, mo, day] = d.split("-").map(Number);
+  const [h, mi] = t.split(":").map(Number);
+  return new TZDate(y, mo - 1, day, h, mi, timezone).toISOString();
+}
+
+// Inverse of pickerValueToIso: ISO instant -> picker wall-clock in profile tz.
+export function isoToPickerValue(iso: string, timezone: string): string {
+  return format(new TZDate(parseISO(iso).getTime(), timezone), "yyyy-MM-dd'T'HH:mm");
 }
 
 // The 42 dates (6 rows x 7 cols, Monday-first) covering a calendar month view.

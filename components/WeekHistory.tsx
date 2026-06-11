@@ -206,6 +206,13 @@ function WeekHistoryInner({
         .lt("date", weekEnd),
     ]);
 
+    // Offline/error: don't render an all-zero week as if it were real data —
+    // bail back to the current week so the user isn't shown a phantom empty one.
+    if (focusRes.error || tasksRes.error || logsRes.error) {
+      setLoading(false);
+      return;
+    }
+
     const sessions = ((focusRes.data ?? []) as FocusSession[]).filter(
       (s) => !deletedIds.current.has(s.id),
     );
@@ -372,7 +379,7 @@ function WeekHistoryInner({
                         <button
                           onClick={() => deleteSession(s)}
                           aria-label="Delete session"
-                          className="press flex h-7 w-7 items-center justify-center rounded-md text-muted opacity-0 transition-opacity hover:bg-tint-strong hover:text-text group-hover:opacity-100"
+                          className="press flex h-11 w-11 items-center justify-center rounded-md text-muted opacity-100 transition-opacity hover:bg-tint-strong hover:text-text sm:opacity-0 sm:group-hover:opacity-100"
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />

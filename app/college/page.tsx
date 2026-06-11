@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CollegeTool } from "@/components/CollegeTool";
 import { LocalCollege } from "@/components/LocalCollege";
+import { ThemeSync } from "@/components/ThemeSync";
 import { isLocalMode } from "@/lib/local-mode";
 import type {
   CollegeActivity,
@@ -40,6 +41,7 @@ export default async function CollegePage() {
     tests,
     honors,
     recommenders,
+    profile,
   ] = await Promise.all([
     byUser("college_activities"),
     byUser("college_schools"),
@@ -50,22 +52,26 @@ export default async function CollegePage() {
     byUser("college_tests"),
     byUser("college_honors"),
     byUser("college_recommenders"),
+    supabase.from("profiles").select("theme").eq("id", uid).maybeSingle(),
   ]);
 
   return (
-    <CollegeTool
-      userId={uid}
-      data={{
-        activities: (activities.data ?? []) as CollegeActivity[],
-        schools: (schools.data ?? []) as CollegeSchool[],
-        prompts: (prompts.data ?? []) as EssayPrompt[],
-        stories: (stories.data ?? []) as EssayStory[],
-        drafts: (drafts.data ?? []) as EssayDraft[],
-        courses: (courses.data ?? []) as CollegeCourse[],
-        tests: (tests.data ?? []) as CollegeTest[],
-        honors: (honors.data ?? []) as CollegeHonor[],
-        recommenders: (recommenders.data ?? []) as CollegeRecommender[],
-      }}
-    />
+    <>
+      <ThemeSync theme={profile.data?.theme ?? "dark"} />
+      <CollegeTool
+        userId={uid}
+        data={{
+          activities: (activities.data ?? []) as CollegeActivity[],
+          schools: (schools.data ?? []) as CollegeSchool[],
+          prompts: (prompts.data ?? []) as EssayPrompt[],
+          stories: (stories.data ?? []) as EssayStory[],
+          drafts: (drafts.data ?? []) as EssayDraft[],
+          courses: (courses.data ?? []) as CollegeCourse[],
+          tests: (tests.data ?? []) as CollegeTest[],
+          honors: (honors.data ?? []) as CollegeHonor[],
+          recommenders: (recommenders.data ?? []) as CollegeRecommender[],
+        }}
+      />
+    </>
   );
 }

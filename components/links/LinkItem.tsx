@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Link } from "@/lib/types";
+import { useNow } from "@/lib/hooks/useNow";
 import { XIcon } from "@/components/icons";
 
 function hostname(url: string): string {
@@ -12,10 +13,13 @@ function hostname(url: string): string {
   }
 }
 
-function relativeTime(iso: string): string {
+// `nowMs` is passed in (never read from Date during render, per React 19
+// purity) and ticks via useNow so labels refresh while the card stays mounted.
+function relativeTime(iso: string, nowMs: number): string {
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return "";
-  const diff = Date.now() - then;
+  if (nowMs === 0) return ""; // pre-hydration; fills in on the first tick
+  const diff = nowMs - then;
   const mins = Math.round(diff / 60000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;
@@ -38,6 +42,7 @@ type Props = {
 
 export function LinkItem({ link, onEdit, onDelete, onTagClick }: Props) {
   const host = hostname(link.url);
+  const now = useNow(60000);
   const [armed, setArmed] = useState(false);
   const [editing, setEditing] = useState(false);
 
@@ -81,7 +86,7 @@ export function LinkItem({ link, onEdit, onDelete, onTagClick }: Props) {
         <span className="truncate">{host}</span>
         <span aria-hidden="true">·</span>
         <time dateTime={link.created_at} className="shrink-0">
-          {relativeTime(link.created_at)}
+          {relativeTime(link.created_at, now)}
         </time>
       </div>
 
@@ -97,7 +102,7 @@ export function LinkItem({ link, onEdit, onDelete, onTagClick }: Props) {
       <p className="mt-1.5 leading-snug text-muted">{link.note}</p>
 
       {link.summary && (
-        <p className="mt-1.5 text-sm leading-snug text-muted/80">
+        <p className="mt-1.5 text-sm leading-snug text-muted">
           {link.summary}
         </p>
       )}
@@ -277,7 +282,7 @@ function LinkEditForm({
           value={tags}
           onChange={(e) => setTags(e.target.value)}
           aria-label="Tags"
-          className="min-h-11 w-full rounded-lg bg-bg px-4 text-sm outline-none focus:ring-2 focus:ring-ring"
+          className="min-h-11 w-full rounded-lg bg-bg px-4 text-base outline-none focus:ring-2 focus:ring-ring sm:text-sm"
         />
         <div className="flex items-center gap-2">
           <button

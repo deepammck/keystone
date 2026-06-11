@@ -144,7 +144,7 @@ export function Overview({
               <span className="text-xs uppercase tracking-wide text-muted">
                 {s.label}
               </span>
-              {s.hint && <span className="text-2xs text-muted/70">{s.hint}</span>}
+              {s.hint && <span className="text-2xs text-muted">{s.hint}</span>}
             </div>
           </button>
         ))}

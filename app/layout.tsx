@@ -34,10 +34,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0a",
+  themeColor: "#2D2A26",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  // No maximumScale/userScalable lock — disabling pinch-zoom fails WCAG 1.4.4.
   viewportFit: "cover",
 };
 

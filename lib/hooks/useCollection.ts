@@ -12,6 +12,15 @@ import { runOrQueue } from "@/lib/offline-queue";
 // module that needs something else (e.g. grouping by tier) is done in the view.
 type BaseRow = { id: string; user_id: string; created_at: string };
 
+// The hook's public surface, named so modules can accept a collection that was
+// created higher up (CollegeTool owns all nine so state survives tab switches).
+export type Collection<T extends BaseRow> = {
+  items: T[];
+  add: (fields: Partial<T>) => Promise<T>;
+  update: (id: string, patch: Partial<T>) => Promise<void>;
+  remove: (id: string) => Promise<void>;
+};
+
 function sortByCreated<T extends BaseRow>(rows: T[]): T[] {
   return [...rows].sort((a, b) => a.created_at.localeCompare(b.created_at));
 }
@@ -20,7 +29,7 @@ export function useCollection<T extends BaseRow>(
   table: string,
   initial: T[],
   userId: string,
-) {
+): Collection<T> {
   const [items, setItems] = useState<T[]>(sortByCreated(initial));
   const [supabase] = useState(() => createClient());
 
@@ -41,6 +50,12 @@ export function useCollection<T extends BaseRow>(
         () => refetchRef.current(),
       )
       .subscribe();
+    // Refetch on mount: `initial` is the page-load snapshot, which goes stale
+    // the moment a consumer unmounts and remounts (e.g. College sub-tab
+    // switches) — without this, edits made earlier in the session would
+    // visually vanish. Also what keeps local mode fresh, where the realtime
+    // channel above is a no-op stub.
+    refetchRef.current();
     return () => {
       supabase.removeChannel(channel);
     };

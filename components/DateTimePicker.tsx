@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import {
-  formatEventTime,
+  formatPickerValue,
   monthGridDays,
   monthLabel,
   shiftMonth,
@@ -85,7 +85,7 @@ export function DateTimePicker({ value, onChange, timezone }: Props) {
         className="min-h-11 w-full rounded-lg bg-bg px-4 text-left outline-none transition-colors focus:ring-2 focus:ring-ring"
       >
         {value ? (
-          <span>{formatEventTime(value)}</span>
+          <span>{formatPickerValue(value)}</span>
         ) : (
           <span className="text-muted">Pick a date &amp; time</span>
         )}

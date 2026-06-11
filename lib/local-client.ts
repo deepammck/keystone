@@ -123,6 +123,9 @@ function withDefaults(table: Tables, row: Row, tz: string): Row {
     out.completed_at ??= null;
     out.position ??= 0;
   }
+  // Mirror the DB column defaults so local-mode rows match Supabase (e.g.
+  // college_honors.position from migration 010).
+  if (table === "college_honors") out.position ??= 0;
   return out;
 }
 
@@ -162,6 +165,11 @@ class Query {
     return this;
   }
   eq(col: string, val: any) {
+    this.filters.push({ col, val, op: "eq" });
+    return this;
+  }
+  // Supabase `.is("date", null)` — strict equality covers the null case here.
+  is(col: string, val: any) {
     this.filters.push({ col, val, op: "eq" });
     return this;
   }
@@ -389,10 +397,14 @@ export function loadLocalInitial(timezone: string) {
     .filter((h) => h.user_id === LOCAL_USER_ID && h.active !== false)
     .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
   const doneHabitIds = db.habit_logs
-    .filter((l) => l.date === today && l.completed)
+    .filter(
+      (l) => l.user_id === LOCAL_USER_ID && l.date === today && l.completed,
+    )
     .map((l) => l.habit_id as string);
 
-  const focusRows = db.focus_sessions.filter((f) => f.date >= weekStart);
+  const focusRows = db.focus_sessions.filter(
+    (f) => f.user_id === LOCAL_USER_ID && f.date >= weekStart,
+  );
   const todaySeconds = focusRows
     .filter((f) => f.date === today)
     .reduce((s, f) => s + (f.duration_seconds as number), 0);
@@ -405,12 +417,14 @@ export function loadLocalInitial(timezone: string) {
   const completedTaskDates = Array.from(
     new Set(
       db.tasks
-        .filter((t) => t.completed && t.date >= weekStart)
+        .filter(
+          (t) => t.user_id === LOCAL_USER_ID && t.completed && t.date >= weekStart,
+        )
         .map((t) => t.date as string),
     ),
   );
   const weekHabitsDone = db.habit_logs.filter(
-    (l) => l.completed && l.date >= weekStart,
+    (l) => l.user_id === LOCAL_USER_ID && l.completed && l.date >= weekStart,
   ).length;
 
   const profile = db.profiles[0];

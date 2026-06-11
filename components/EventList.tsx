@@ -1,9 +1,13 @@
 "use client";
 
 import { memo, useState } from "react";
-import { format } from "date-fns";
 import type { Event } from "@/lib/types";
-import { formatCountdown, formatEventTime } from "@/lib/utils";
+import {
+  formatCountdown,
+  formatEventTime,
+  isoToPickerValue,
+  pickerValueToIso,
+} from "@/lib/utils";
 import { useNow } from "@/lib/hooks/useNow";
 import { DateTimePicker } from "@/components/DateTimePicker";
 import { AlertTriangleIcon, PencilIcon, XIcon } from "@/components/icons";
@@ -15,13 +19,6 @@ type Props = {
   onDelete: (id: string) => void;
   timezone: string;
 };
-
-// The stored due_at is an ISO/UTC string; the picker speaks local
-// "yyyy-MM-ddTHH:mm". addEvent reads the picker value through `new Date(...)`
-// (local), so seeding edits with local-formatted time round-trips symmetrically.
-function toPickerValue(dueIso: string): string {
-  return format(new Date(dueIso), "yyyy-MM-dd'T'HH:mm");
-}
 
 // Memoized: it self-ticks via useNow for countdowns, so it needn't also repaint
 // on every unrelated Dashboard re-render (focus-timer tick, habit/task toggle).
@@ -41,10 +38,14 @@ function EventListInner({
   const [editTitle, setEditTitle] = useState("");
   const [editDue, setEditDue] = useState("");
 
+  // Picker values are wall-clock strings in the PROFILE timezone; convert to a
+  // real instant here so the hook/store only ever sees ISO. (Interpreting the
+  // wall clock in device-local time shifted deadlines whenever the device tz
+  // differed from the profile tz.)
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !due) return;
-    onAdd(title, due);
+    onAdd(title, pickerValueToIso(due, timezone));
     setTitle("");
     setDue("");
     setAdding(false);
@@ -54,13 +55,13 @@ function EventListInner({
     setAdding(false);
     setEditingId(ev.id);
     setEditTitle(ev.title);
-    setEditDue(toPickerValue(ev.due_at));
+    setEditDue(isoToPickerValue(ev.due_at, timezone));
   }
 
   function submitEdit(e: React.FormEvent) {
     e.preventDefault();
     if (!editingId || !editTitle.trim() || !editDue) return;
-    onEdit(editingId, editTitle, editDue);
+    onEdit(editingId, editTitle, pickerValueToIso(editDue, timezone));
     setEditingId(null);
   }
 
@@ -148,7 +149,7 @@ function EventListInner({
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate leading-tight">{ev.title}</p>
-                <p className="text-xs text-muted">{formatEventTime(ev.due_at)}</p>
+                <p className="text-xs text-muted">{formatEventTime(ev.due_at, timezone)}</p>
               </div>
               <button
                 aria-label="Edit event"

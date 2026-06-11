@@ -55,9 +55,17 @@ function GoalBannerInner({ goals, onAdd, onDelete }: Props) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={submit}
+            // Escape leaves add-mode without creating a goal (otherwise the
+            // only exit is to empty the field first).
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                setTitle("");
+                setAdding(false);
+              }
+            }}
             autoFocus
             placeholder="What do you want to achieve?"
-            className="min-h-8 w-48 rounded-full bg-tint px-3 text-xs outline-none placeholder:text-muted focus:ring-2 focus:ring-ring"
+            className="min-h-8 w-48 rounded-full bg-tint px-3 text-base outline-none placeholder:text-muted focus:ring-2 focus:ring-ring sm:text-xs"
           />
         </form>
       ) : (

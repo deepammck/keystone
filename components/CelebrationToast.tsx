@@ -16,6 +16,8 @@ export function CelebrationToast({ toasts }: Props) {
     <>
       {toasts.some((t) => t.perfect) && <Confetti />}
       <div
+        role="status"
+        aria-live="polite"
         className="pointer-events-none fixed z-50 flex flex-col items-end gap-2"
         style={{
           top: "calc(env(safe-area-inset-top) + 1rem)",

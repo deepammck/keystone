@@ -43,37 +43,22 @@ export function useLinks(initial: Link[], userId: string) {
     };
   }, [supabase, userId, refetch]);
 
-  // Add: best-effort fetch page metadata, then save. A failed/blocked metadata
-  // fetch must never stop the save — we just store the note without title/summary.
+  // Add: save immediately (capture must be instant), then enrich with page
+  // metadata in the background. A failed/blocked metadata fetch never touches
+  // the saved link — it just keeps the user's note without title/summary.
   const addLink = useCallback(
     async ({ url, note, tags }: { url: string; note: string; tags: string[] }) => {
       const trimmedUrl = url.trim();
       const trimmedNote = note.trim();
       if (!trimmedUrl || !trimmedNote) return;
 
-      let meta: { title: string | null; summary: string | null } = {
-        title: null,
-        summary: null,
-      };
-      try {
-        const res = await fetch(
-          `/api/fetch-metadata?url=${encodeURIComponent(trimmedUrl)}`,
-        );
-        if (res.ok) {
-          const body = await res.json();
-          meta = { title: body.title ?? null, summary: body.summary ?? null };
-        }
-      } catch {
-        // offline or function unreachable — save anyway
-      }
-
       const optimistic: Link = {
         id: crypto.randomUUID(),
         user_id: userId,
         url: trimmedUrl,
         note: trimmedNote,
-        title: meta.title,
-        summary: meta.summary,
+        title: null,
+        summary: null,
         tags,
         created_at: new Date().toISOString(),
       };
@@ -86,11 +71,37 @@ export function useLinks(initial: Link[], userId: string) {
           user_id: userId,
           url: optimistic.url,
           note: optimistic.note,
-          title: optimistic.title,
-          summary: optimistic.summary,
+          title: null,
+          summary: null,
           tags: optimistic.tags,
         },
       });
+
+      // Fire-and-forget enrichment — deliberately not awaited so the add form
+      // unblocks as soon as the link itself is saved.
+      void (async () => {
+        try {
+          const res = await fetch(
+            `/api/fetch-metadata?url=${encodeURIComponent(trimmedUrl)}`,
+          );
+          if (!res.ok) return;
+          const body = await res.json();
+          const title = body.title ?? null;
+          const summary = body.summary ?? null;
+          if (!title && !summary) return;
+          setLinks((prev) =>
+            prev.map((l) => (l.id === optimistic.id ? { ...l, title, summary } : l)),
+          );
+          await runOrQueue(supabase, {
+            table: "links",
+            op: "update",
+            match: { id: optimistic.id },
+            payload: { title, summary },
+          });
+        } catch {
+          // offline or function unreachable — the link is already saved
+        }
+      })();
     },
     [supabase, userId],
   );

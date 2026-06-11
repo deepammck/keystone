@@ -214,23 +214,28 @@ function HeatmapInner({
                   {label}
                 </span>
               ))}
-              {cellData.map(({ d, s, lvl, future }) => (
-                <span
-                  key={d}
-                  title={
-                    future
-                      ? formatDayLabel(d)
-                      : `${formatDayLabel(d)} · ${s.tasks} tasks · ${formatMinutes(
-                          s.focusSeconds,
-                        )} · ${s.habits}/${totalHabits} habits`
-                  }
-                  className={`h-4 w-4 rounded transition-all ${
-                    future
-                      ? "border border-border/50 bg-tint-strong opacity-40"
-                      : LEVEL_CLASS[lvl]
-                  }`}
-                />
-              ))}
+              {cellData.map(({ d, s, lvl, future }) => {
+                const detail = future
+                  ? formatDayLabel(d)
+                  : `${formatDayLabel(d)} · ${s.tasks} tasks · ${formatMinutes(
+                      s.focusSeconds,
+                    )} · ${s.habits}/${totalHabits} habits`;
+                return (
+                  <span
+                    key={d}
+                    title={detail}
+                    // The day's data lives only in this label/tooltip, so expose
+                    // it to screen readers too (title alone isn't announced).
+                    role="img"
+                    aria-label={detail}
+                    className={`h-4 w-4 rounded transition-all ${
+                      future
+                        ? "border border-border/50 bg-tint-strong opacity-40"
+                        : LEVEL_CLASS[lvl]
+                    }`}
+                  />
+                );
+              })}
             </div>
 
             {/* Intensity legend so the colour ramp reads as a scale, like the

@@ -136,7 +136,7 @@ export function FocusTimer({
             onChange={(e) => setLabel(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && confirmStop()}
             placeholder="What did you work on? (optional)"
-            className="min-h-12 w-full rounded-xl bg-tint px-4 text-center font-mono text-sm outline-none placeholder:text-muted focus:ring-2 focus:ring-ring"
+            className="min-h-12 w-full rounded-xl bg-tint px-4 text-center font-mono text-base outline-none placeholder:text-muted focus:ring-2 focus:ring-ring sm:text-sm"
           />
           <button
             onClick={confirmStop}
@@ -146,7 +146,7 @@ export function FocusTimer({
           </button>
           <button
             onClick={() => setLabeling(false)}
-            className="font-mono text-xs uppercase tracking-[0.1em] text-muted hover:text-text"
+            className="min-h-11 px-3 font-mono text-xs uppercase tracking-[0.1em] text-muted hover:text-text"
           >
             Back
           </button>
@@ -177,7 +177,7 @@ export function FocusTimer({
           {canLog && (
             <button
               onClick={onCancel}
-              className="mt-2.5 inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.1em] text-muted hover:text-text"
+              className="mt-1 inline-flex min-h-11 items-center gap-1 px-3 font-mono text-[11px] uppercase tracking-[0.1em] text-muted hover:text-text"
             >
               <XIcon size={13} /> Cancel
             </button>

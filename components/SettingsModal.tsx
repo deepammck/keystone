@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { runOrQueue } from "@/lib/offline-queue";
 import type { Habit } from "@/lib/types";
 import { XIcon } from "@/components/icons";
 
@@ -33,10 +34,64 @@ type Props = {
 
 const minutesToHHMM = (m: number) =>
   `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
-const hhmmToMinutes = (s: string) => {
+// Returns null for an empty/malformed value so callers can skip the write
+// instead of persisting NaN (a cleared time input used to write wake/sleep NaN).
+const hhmmToMinutes = (s: string): number | null => {
   const [h, m] = s.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
   return h * 60 + m;
 };
+
+// One habit row: rename inline; the X on a saved habit arms a "Remove?" confirm
+// (its log history is deleted with it), an unsaved row is removed immediately.
+function HabitRow({
+  name,
+  isSaved,
+  onRename,
+  onRemove,
+}: {
+  name: string;
+  isSaved: boolean;
+  onRename: (name: string) => void;
+  onRemove: () => void;
+}) {
+  const [armed, setArmed] = useState(false);
+
+  useEffect(() => {
+    if (!armed) return;
+    const t = setTimeout(() => setArmed(false), 3500);
+    return () => clearTimeout(t);
+  }, [armed]);
+
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        value={name}
+        onChange={(e) => onRename(e.target.value)}
+        placeholder="New habit"
+        className="min-h-11 min-w-0 flex-1 rounded-lg bg-tint px-4 outline-none focus:ring-2 focus:ring-ring"
+      />
+      {armed ? (
+        <button
+          type="button"
+          onClick={onRemove}
+          className="press shrink-0 rounded-md bg-danger/15 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/25"
+        >
+          Remove? History goes too
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => (isSaved ? setArmed(true) : onRemove())}
+          aria-label="Remove habit"
+          className="press grid h-11 w-11 shrink-0 place-items-center text-muted hover:text-text"
+        >
+          <XIcon size={18} />
+        </button>
+      )}
+    </div>
+  );
+}
 
 export function SettingsModal({
   userId,
@@ -93,18 +148,26 @@ export function SettingsModal({
     }
   }
 
+  // Guard against a double-save (X click + the backdrop/Escape handlers all
+  // route here). Saving + reloading once is enough.
+  const savingRef = useRef(false);
+
   async function save() {
+    if (savingRef.current) return;
+    savingRef.current = true;
     setSaving(true);
     const goal = Math.max(0, Math.round(Number(focusGoal) || 0));
 
     // Reconcile habits against the original set: delete rows the user removed,
-    // update renamed ones, and insert new ones (position = list order).
+    // update renamed ones, and insert new ones (position = list order). All
+    // writes go through runOrQueue so they're optimistic + survive offline
+    // (raw supabase calls used to fail silently with no connection).
     const originalIds = new Set(habits.map((h) => h.id));
     const keptIds = new Set(habitRows.map((r) => r.id));
-    const habitOps: PromiseLike<unknown>[] = [];
+    const ops: Promise<unknown>[] = [];
     for (const h of habits) {
       if (!keptIds.has(h.id)) {
-        habitOps.push(supabase.from("habits").delete().eq("id", h.id));
+        ops.push(runOrQueue(supabase, { table: "habits", op: "delete", match: { id: h.id } }));
       }
     }
     habitRows.forEach((row, i) => {
@@ -113,41 +176,51 @@ export function SettingsModal({
       if (originalIds.has(row.id)) {
         const original = habits.find((h) => h.id === row.id);
         if (original && original.name !== name) {
-          habitOps.push(
-            supabase.from("habits").update({ name }).eq("id", row.id),
+          ops.push(
+            runOrQueue(supabase, {
+              table: "habits",
+              op: "update",
+              payload: { name },
+              match: { id: row.id },
+            }),
           );
         }
       } else {
-        habitOps.push(
-          supabase
-            .from("habits")
-            .insert({ user_id: userId, name, position: i }),
+        ops.push(
+          runOrQueue(supabase, {
+            table: "habits",
+            op: "insert",
+            payload: { id: crypto.randomUUID(), user_id: userId, name, position: i },
+          }),
         );
       }
     });
 
-    await Promise.all([
-      ...habitOps,
-      tz !== timezone
-        ? supabase.from("profiles").update({ timezone: tz }).eq("id", userId)
-        : Promise.resolve(),
-      hhmmToMinutes(wake) !== wakeMinute ||
-      hhmmToMinutes(sleep) !== sleepMinute
-        ? supabase
-            .from("profiles")
-            .update({
-              wake_minute: hhmmToMinutes(wake),
-              sleep_minute: hhmmToMinutes(sleep),
-            })
-            .eq("id", userId)
-        : Promise.resolve(),
-      goal !== focusGoalMinutes
-        ? supabase
-            .from("profiles")
-            .update({ focus_goal_minutes: goal })
-            .eq("id", userId)
-        : Promise.resolve(),
-    ]);
+    // Coalesce all profile-field changes into one upsert (skipping NaN times).
+    const profilePatch: Record<string, unknown> = {};
+    if (tz !== timezone) profilePatch.timezone = tz;
+    const wakeMin = hhmmToMinutes(wake);
+    const sleepMin = hhmmToMinutes(sleep);
+    if (wakeMin != null && wakeMin !== wakeMinute) profilePatch.wake_minute = wakeMin;
+    if (sleepMin != null && sleepMin !== sleepMinute) profilePatch.sleep_minute = sleepMin;
+    if (goal !== focusGoalMinutes) profilePatch.focus_goal_minutes = goal;
+    if (Object.keys(profilePatch).length > 0) {
+      ops.push(
+        runOrQueue(supabase, {
+          table: "profiles",
+          op: "upsert",
+          payload: { id: userId, ...profilePatch },
+        }),
+      );
+    }
+
+    // Nothing changed — just close, no need to reload the whole app.
+    if (ops.length === 0) {
+      savingRef.current = false;
+      onClose();
+      return;
+    }
+    await Promise.all(ops);
     window.location.reload();
   }
 
@@ -156,13 +229,54 @@ export function SettingsModal({
     window.location.assign("/");
   }
 
+  // Save-and-close on Escape (matches the X button — there's no separate Save),
+  // and keep Tab cycling inside the dialog so keyboard focus can't wander into
+  // the page underneath while the modal is open.
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    // Move focus into the dialog on open; restore it on close.
+    const prior = document.activeElement as HTMLElement | null;
+    dialogRef.current?.focus();
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        save();
+        return;
+      }
+      if (e.key !== "Tab" || !dialogRef.current) return;
+      const focusables = dialogRef.current.querySelectorAll<HTMLElement>(
+        'button, input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      prior?.focus?.();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- save is stable enough for this lifetime
+  }, []);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-text/30 p-4 sm:items-center"
-      onClick={onClose}
+      onClick={save}
     >
       <div
-        className="w-full max-w-sm rounded-2xl bg-bg p-6"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Settings"
+        tabIndex={-1}
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-2xl bg-bg p-6 outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between gap-3">
@@ -185,30 +299,21 @@ export function SettingsModal({
           <label className="text-sm text-muted">Habits</label>
           <div className="mt-2 flex flex-col gap-2">
             {habitRows.map((row, i) => (
-              <div key={row.id} className="flex items-center gap-2">
-                <input
-                  value={row.name}
-                  onChange={(e) =>
-                    setHabitRows((prev) =>
-                      prev.map((r, j) =>
-                        j === i ? { ...r, name: e.target.value } : r,
-                      ),
-                    )
-                  }
-                  placeholder="New habit"
-                  className="min-h-11 flex-1 rounded-lg bg-tint px-4 outline-none focus:ring-2 focus:ring-ring"
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    setHabitRows((prev) => prev.filter((_, j) => j !== i))
-                  }
-                  aria-label="Remove habit"
-                  className="press grid h-11 w-11 shrink-0 place-items-center text-muted hover:text-text"
-                >
-                  <XIcon size={18} />
-                </button>
-              </div>
+              <HabitRow
+                key={row.id}
+                name={row.name}
+                // Removing a saved habit cascades its whole log history away on
+                // save, so the X arms a confirm instead of deleting outright.
+                isSaved={habits.some((h) => h.id === row.id)}
+                onRename={(name) =>
+                  setHabitRows((prev) =>
+                    prev.map((r, j) => (j === i ? { ...r, name } : r)),
+                  )
+                }
+                onRemove={() =>
+                  setHabitRows((prev) => prev.filter((_, j) => j !== i))
+                }
+              />
             ))}
           </div>
           <button
